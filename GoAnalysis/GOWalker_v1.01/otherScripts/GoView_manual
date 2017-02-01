@@ -1,0 +1,58 @@
+##GGplot multiple extra pour 2 variables et Aspect Conditions
+library(ggplot2)
+library(gridExtra)
+#REPLACE FILENAME by your file
+resultats=read.delim("GoWalkeresults/hyperesults_all.txt",sep=";")
+x <-as.numeric(c(resultats[,7]))
+profondeur <-as.numeric(resultats[,3])#go level
+y <- as.numeric(resultats[,3])#go level
+LogP <- as.numeric(c(log(resultats[,7])))#p value
+yx <- resultats[1:2]
+
+#Aspect prend doit etre de mme nb de dimensions et longueur que les variables, et nb de reps=nb de variables 
+#Aspect dataframe qui represente la condition
+Aspect <- as.factor(c(rep(1,length(which(resultats$Aspect=="MF"))), rep(2,length(which(resultats$Aspect=="BP"))),rep(3,length(which(resultats$Aspect=="CC"))))) # 800condition1+852condition2 soit 1652 de longueur comme les autres variables
+#Aspect <-as.factor(c(aspect))
+#Aspect <-resultats[3]
+
+#placeholder plot - prints nothing at all
+empty <- ggplot()+geom_point(aes(1,1), colour="white") +
+  theme(                              
+    plot.background = element_blank(), 
+    panel.grid.major = element_blank(), 
+    panel.grid.minor = element_blank(), 
+    panel.border = element_blank(), 
+    panel.background = element_blank(),
+    axis.title.x = element_blank(),
+    axis.title.y = element_blank(),
+    axis.text.x = element_blank(),
+    axis.text.y = element_blank(),
+    axis.ticks = element_blank()
+  )
+
+#scatterplot of x and y variables
+scatter <- ggplot(yx,aes(LogP,profondeur)) + 
+  geom_point(aes(color=Aspect)) + 
+  scale_color_manual(values = c("orange", "purple","grey")) + 
+  theme(legend.position=c(0,1),legend.justification=c(0,1))
+
+
+#marginal density of x - plot on top
+plot_top <- ggplot(yx, aes(LogP, fill=Aspect)) + 
+  geom_density(alpha=.5) + 
+  scale_fill_manual(values = c("orange", "purple","grey")) + 
+  theme(legend.position = "none")
+
+
+#marginal density of y - plot on the right
+plot_right <- ggplot(yx, aes(profondeur, fill=Aspect)) + 
+  geom_density(alpha=.5) + 
+  coord_flip() + 
+  scale_fill_manual(values = c("orange", "purple","grey"))+ 
+  theme(legend.position = "none")
+
+
+#arrange the plots together, with appropriate height and width for each row and column
+scatter<-scatter+geom_smooth()
+pdf("GoWalkeresults/GO_distribution.pdf") #auto-generate pdf
+grid.arrange(plot_top, empty, scatter, plot_right, ncol=2, nrow=2, widths=c(4, 1), heights=c(1, 4))

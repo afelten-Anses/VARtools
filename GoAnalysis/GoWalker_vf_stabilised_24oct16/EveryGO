@@ -1,0 +1,210 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+import os, sys
+import argparse       				#arguments parser
+import uuid           				#uuid filename format
+from lxml import etree 				#xml parser
+import xml.etree.ElementTree as ET 	#xml parser ElemenTree only
+
+__doc__="""
+EveryGO workfow. In order to perform GO-terms enrichment analysis for one or more nodes/comparisons of the phylogeny stored in the XML file.
+
+@requires: U{python 2.7<https://www.python.org/downloads/>} (tested with 2.7.6)
+@requires: U{lxml<https://github.com/lxml/lxml>}
+@requires: GOtrimmer_xml
+@requires: GOwalker
+@requires: GoView
+"""
+
+
+########################################################################################################################################################
+##################################################################EVERYGO v 1.00########################################################################
+########################################################################################################################################################
+
+
+def get_parser():	#Parse arguments
+	"""
+	Arguments setting and parsing
+	@return: arguments list
+	@rtype: parser object
+	"""
+
+	parser = argparse.ArgumentParser(description='Perform GO-terms enrichment analysis for one or more nodes/comparisons of the phylogeny stored in the XML file')
+
+
+	parser.add_argument('-xml', action="store", dest='Xml', 
+						type=str, required=True, help='XML input file obtained by GoXML script')
+
+	parser.add_argument('-comp', action="store", dest='Comp', 
+						type=str, required=True, nargs='+', help='XML comparisons values in ascending order')
+ 
+	parser.add_argument('-rpath', action="store", dest='Rpath', 
+						type=str, required=True, help='Rscripts folder path')		
+
+	parser.add_argument('--mkuniverse', dest='mkuniverse', action='store_true', 
+						help='Built universe', default=False)
+
+	parser.add_argument('--view', dest='View', action='store_true', 
+						help='Generate graphical representation', default=False)
+
+	return parser
+
+
+def makeuniverse(xmlname):
+	"""
+	Make universe of GO-terms from the XML file
+	@param xmlname: the xml filename
+	@type xmlname: string
+	"""
+	print "Making Universe...\n"
+	parser = etree.XMLParser(remove_blank_text=True)
+	tree = etree.ElementTree()
+	tree =etree.parse(xmlname,parser)
+	root = tree.getroot()
+	univ=open("univers.txt","w")
+	###XML Parsing from root: end
+	variants = root.findall('NODE/COMPARISON/VARIANTS/VARIANT')
+	dicoPos = {}
+
+	for variant in variants :
+
+		position = int(variant.find("POSITION").text)
+
+		if position not in dicoPos.keys() :
+			dicoPos[position] = []
+			GOs = variant.findall("REGION/GOLIST/GO/ID")
+
+			for GO in GOs :
+
+				dicoPos[position].append(GO.text)
+				if str(GO.text) != "":
+					if str(GO.text) != "[]":
+						univ.write(str(GO.text).replace("['","")+'\n')
+
+
+def everygo(compvalues,view,xmlname,Rpath):
+	"""
+	Make enrichment analysis for each comparison values
+	@param compvalues: comparisons values returned by getcomp() 
+	@type compvalues: string
+	@param view: -view argument --> if view != 0 , graphical representation of enrichment will be processed
+	@type view: int
+	@param xmlname: the xml filename
+	@type xmlname: string
+	"""
+
+	print 'GO-terms retrieving for each comparison submitted'
+	###XML Parsing from root: start
+	parser = etree.XMLParser(remove_blank_text=True)
+	tree = etree.ElementTree()
+	tree =etree.parse(xmlname,parser)
+	root = tree.getroot()
+	i=1
+	###XML Parsing from root: end
+
+	#Analyse <COMPARISON> field values
+	comparisonsfield=tree.xpath("NODE/COMPARISON")
+
+	#For each comparison values (in Arguments -comp),create a specific path if dont exists and collect go-terms (more details below)
+	for numxml in compvalues:
+		goechlist=[] 		#goechlist=list of non-enriched GO-terms from comparison x
+		num=int(numxml)-1	#numxl=comparison number in xml(the x of comparison value="x"),start from 1
+							#num=comparison number indice in the list num. num starts from 0 , so num=numxml-1
+
+		#Create a path specific for <COMPARISON Value>
+		if not os.path.exists(str(numxml)+"/"):
+			os.mkdir(str(numxml))
+		
+		#Collect GO-terms from <COMPARISON Value> XML and export GO-terms file in the specific <COMPARISON Value> path
+		GOfile = open(str(numxml)+"/go_ech.txt", "w")
+
+		for comparisonfield in comparisonsfield[num]:
+
+			if "GO:" in etree.tostring(comparisonfield):
+
+				go_ids=comparisonfield.findall("VARIANT/REGION/GOLIST/GO/ID") #find all GO:ID from <ID></ID>
+
+				for go_id in go_ids:
+					go_id=(go_id.text).replace('["',"") #In order to have a nice output if some GO:ID was not parsed correctly (fixed, but I'm superstitious :) )
+					goechlist.append(go_id)
+
+		for goid in goechlist:
+			GOfile.write(str(goid)+'\n')
+		GOfile.close()
+
+		#GO ENRICHMENT ANALYSYS for <COMPARISON Value> : Call GOwalker and Goview
+
+		if Rpath[-1] != '/':
+			 Rpath =  Rpath + '/'
+
+		print 'GO-terms enrichment Analysis for <COMPARISON value="'+str(numxml)+'">'
+		os.system("R --vanilla --slave --args "+" "+ str(numxml)+" /go_ech.txt "+ str(numxml) + " < " + Rpath + "GoWalker")
+
+		#cleaning Gowalker temporary output (hyperesults.txt)
+		os.system('cat '+str(numxml)+'/hyperesults_bp.txt | awk \'{print $0 ";BP"}\' > '+str(numxml)+'/hyperesults.txt') # add Aspect tag
+		os.system('cat '+str(numxml)+'/hyperesults_mf.txt | awk \'{print $0 ";MF"}\' >> '+str(numxml)+'/hyperesults.txt')
+		os.system('cat '+str(numxml)+'/hyperesults_cc.txt | awk \'{print $0 ";CC"}\' >> '+str(numxml)+'/hyperesults.txt')
+		os.system('sed -i \'0,/BP/s//Aspect/\' '+str(numxml)+'hyperesults.txt') # Correcting header name
+		os.system('sed -i \'0,/CC/s//Aspect/\' '+str(numxml)+'hyperesults.txt')
+		os.system('sed -i \'0,/MF/s//Aspect/\' '+str(numxml)+'hyperesults.txt')
+		os.system('sort -r '+str(numxml)+'/hyperesults.txt') # keep one header
+		os.system('sed 1d '+str(numxml)+'/hyperesults.txt -i')
+		os.system('sed 1d '+str(numxml)+'/hyperesults.txt -i')
+		#add GO ASPECT INFO for Goview (Enrichment_analysis_results.txt)
+		os.system('cut -d ";" -s -f 4,5 '+str(numxml)+'/hyperesults_bp.txt | awk \'{print $0 ";BP"}\' > '+str(numxml)+'/hyperesults_all.txt')
+		os.system('cut -d ";" -s -f 4,5 '+str(numxml)+'/hyperesults_mf.txt | awk \'{print $0 ";MF"}\' >> '+str(numxml)+'/hyperesults_all.txt')
+		os.system('cut -d ";" -s -f 4,5 '+str(numxml)+'/hyperesults_cc.txt | awk \'{print $0 ";CC"}\' >> '+str(numxml)+'/hyperesults_all.txt')
+		os.system("sort -r "+str(numxml)+"/hyperesults_all.txt | uniq | sed '1d'| sed '1d' | sed '1d' > "+str(numxml)+"/hyperesults_all_final.txt") #keep one header
+		os.system("sed -i '1i Golevel;Pvalue;Aspect' "+str(numxml)+"/hyperesults_all_final.txt") 
+		os.system("cat "+str(numxml)+"/hyperesults_all_final.txt | tr '\"' '0' > "+str(numxml)+"/Enrichment_analysis_results.txt") #cleaning output
+
+		#OPTIONNAL GRAPHICAL REPRESENTATION
+		if view:
+			print "Generating grahical representation"
+			os.system("R --vanilla --slave --args "+" "+ str(numxml)+" < " + Rpath + "GoView")
+
+		#remove temporary files
+		os.system('rm '+str(numxml)+'/hyperesults_* '+str(numxml)+'/go* '+str(numxml)+'/Enrichment_analysis_results.txt')
+
+		#FINAL OUTPUT: 	For GoWalker --> str(numxml)/Enrichment_analysis_results.txt (tabulated text)
+		# 				For GoView --> str(numxml)/GO_distribution.pdf
+
+																										
+		
+#######################################################################################################################
+#MAIN##################################################################################################################
+#######################################################################################################################
+
+def main():	
+	
+	##################### get parser ###############################
+	parser=get_parser()
+
+	######## Print parser help if arguments missed #################
+	if len(sys.argv)==1:
+		parser.print_help()
+		sys.exit(1)
+	
+	##################  Manage Arguments  ##########################
+
+	#Parse arguments
+	Arguments=parser.parse_args()
+	#execute functions
+
+	#Make universe of GO-terms if its necessary
+	if Arguments.mkuniverse:
+		makeuniverse(Arguments.Xml)
+
+	#Then, make enrichment analysis for every comparison n° choosed
+	everygo(Arguments.Comp,Arguments.View,Arguments.Xml,Arguments.Rpath)
+	#Remove temporary file
+	os.system('rm univers.txt')
+	#FINAL OUTPUT: 	For GoWalker --> str(numxml)/Enrichment_analysis_results.txt (tabulated text)
+	# 				For GoView --> str(numxml)/GO_distribution.pdf
+
+
+#############################################################################
+#Do not execute the script if it was imported as a module!
+if __name__ == "__main__":													
+	main()												
+#############################################################################

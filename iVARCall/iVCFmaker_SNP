@@ -1,0 +1,118 @@
+#!/usr/bin/python
+# -*- coding: iso-8859-1 -*-
+import os, sys, time
+import argparse
+from subprocess import Popen, list2cmdline
+
+__doc__="""
+@requires: GATK
+"""
+
+def get_parser():
+	"""
+	Parse arguments
+	@return: arguments list
+	@rtype: parser object
+	"""
+
+	parser = argparse.ArgumentParser(description='Make VCF from BAM file (SNPs only)')
+
+	parser.add_argument('-ref', action="store", dest='refFASTA', 
+						type=str, required=True, help='reference genome in FASTA (REQUIRED)')
+
+	parser.add_argument('-b', action="store", dest='BAM', 
+						type=str, required=True, help='bam files (REQUIRED)')
+
+	parser.add_argument('-o', action="store", dest='output', 
+						type=str, default='output', help='output name (default:output)')
+
+	parser.add_argument('-m', action="store", dest='maxMemory', 
+						type=int, default='4000', help='max memory to use in Mb (default:4000)')
+
+	parser.add_argument('-GATKJAR', action="store", dest='GATKJAR', 
+						type=str, default='/opt/GATK/3.4.0/GenomeAnalysisTK.jar', help='GenomeAnalysisTK jar path')  #required=True
+
+	parser.add_argument('-s', action="store", dest='stand_call_conf', 
+						type=str, default='50', help='stand_call_conf parameter for GATK UnifiedGenotyper (default:50)')
+
+	parser.add_argument('-T', action="store", dest='nbThreads', 
+						type=int, default='1', help='maximum number of threads to use (default:1)')
+
+	return parser
+
+
+def exec_commands(cmds, nbThreads):
+    """
+    Exec commands in parallel in multiple process (as much as we have CPU)
+    @param cmds: list of commands
+	@type cmds: list
+	@param nbThreads: number of threads to use
+	@type nbThreads: integer
+    """
+    if not cmds: return # empty list
+
+    def done(p):
+        return p.poll() is not None
+    def success(p):
+        return p.returncode == 0
+    def fail():
+        sys.exit(1)
+
+    max_task = nbThreads
+    processes = []
+    while True:
+        while cmds and len(processes) < max_task:
+            task = cmds.pop()
+            #print list2cmdline(task)
+            processes.append(Popen(task))
+
+        for p in processes:
+            if done(p):
+                if success(p):
+                    processes.remove(p)
+                else:
+                    fail()
+
+        if not processes and not cmds:
+            break
+        else:
+            time.sleep(0.05)	
+
+
+
+#main function	
+def main():
+
+	##################### gets arguments #####################
+	parser=get_parser()
+	
+	#print parser.help if no arguments
+	if len(sys.argv)==1:
+		parser.print_help()
+		sys.exit(1)
+	
+	Arguments=parser.parse_args()
+
+	if Arguments.maxMemory >= 4000 :
+		Xmx = "-Xmx4g"
+	else :
+		Xmx = "-Xmx2g"	
+
+
+	#variant calling
+	print "--> SNP calling...\n"
+	cmds = []
+
+	cmds.append(["java",Xmx, "-jar", Arguments.GATKJAR, "-R", Arguments.refFASTA, "-T", "UnifiedGenotyper", \
+		"-o", Arguments.output + "_SNP_raw.vcf", "-ndrs", "-stand_call_conf", Arguments.stand_call_conf, \
+		"-glm", "SNP", "-dcov", "200", "--sample_ploidy", "1"\
+		, "-nt ", str(Arguments.nbThreads), "-I", Arguments.BAM \
+		,"-out_mode","EMIT_ALL_SITES"])
+
+	exec_commands(cmds, 1)
+	
+	print "\n--> SNP calling finish!\n"	
+	
+
+if __name__ == "__main__":
+	main()	            	

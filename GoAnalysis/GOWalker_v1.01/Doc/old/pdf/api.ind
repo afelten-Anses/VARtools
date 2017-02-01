@@ -1,0 +1,36 @@
+\begin{theindex}
+
+  \item EveryGO \textit{(module)}, \hyperpage{2--3}
+    \subitem EveryGO.everygo \textit{(function)}, \hyperpage{2}
+    \subitem EveryGO.get\_parser \textit{(function)}, \hyperpage{2}
+    \subitem EveryGO.getcomp \textit{(function)}, \hyperpage{2}
+    \subitem EveryGO.main \textit{(function)}, \hyperpage{3}
+    \subitem EveryGO.makeuniverse \textit{(function)}, \hyperpage{2}
+
+  \indexspace
+
+  \item GOtrimmer \textit{(module)}, \hyperpage{4}
+    \subitem GOtrimmer.add\_object \textit{(function)}, \hyperpage{4}
+    \subitem GOtrimmer.get\_parser \textit{(function)}, \hyperpage{4}
+    \subitem GOtrimmer.main \textit{(function)}, \hyperpage{4}
+  \item GoXML \textit{(module)}, \hyperpage{5--7}
+    \subitem GoXML.extractNP \textit{(function)}, \hyperpage{5}
+    \subitem GoXML.get\_parser \textit{(function)}, \hyperpage{5}
+    \subitem GoXML.idmapping \textit{(function)}, \hyperpage{6}
+    \subitem GoXML.main \textit{(function)}, \hyperpage{6}
+    \subitem GoXML.readDBFile \textit{(function)}, \hyperpage{5}
+    \subitem GoXML.readDBGOFile \textit{(function)}, \hyperpage{5}
+    \subitem GoXML.UNIPROTtoGO \textit{(function)}, \hyperpage{6}
+
+  \indexspace
+
+  \item VCFtoGO \textit{(module)}, \hyperpage{8--10}
+    \subitem VCFtoGO.extractinfopos \textit{(function)}, \hyperpage{8}
+    \subitem VCFtoGO.get\_parser \textit{(function)}, \hyperpage{8}
+    \subitem VCFtoGO.idmapping \textit{(function)}, \hyperpage{9}
+    \subitem VCFtoGO.main \textit{(function)}, \hyperpage{9}
+    \subitem VCFtoGO.readDBFile \textit{(function)}, \hyperpage{8}
+    \subitem VCFtoGO.readDBGOFile \textit{(function)}, \hyperpage{8}
+    \subitem VCFtoGO.UNIPROTtoGO \textit{(function)}, \hyperpage{9}
+
+\end{theindex}

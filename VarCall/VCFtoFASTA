@@ -1,0 +1,178 @@
+#!/usr/bin/python
+# -*- coding: iso-8859-1 -*-
+import os, sys
+import csv
+import argparse
+from itertools import chain
+
+
+__doc__="""
+Create concatenate variant fasta file from VCF file.
+This script was designed for the VARCall workflow.
+"""
+
+def get_parser():
+	"""
+	Parse arguments
+	@return: arguments list
+	@rtype: parser object
+	"""
+
+	parser = argparse.ArgumentParser(description='Create SNP and INDEL concatenate variant fasta file from VCF file')
+
+	parser.add_argument('-i', action="store", dest='VCF', 
+						type=str, required=True, help='vcf file (REQUIRED)')
+
+	parser.add_argument('-o', action="store", dest='output', 
+						type=str, default='output', help='output prefix (default:output)')
+
+	parser.add_argument('--SNP', dest='writeSNP', 
+						action='store_true', help='Write a FASTA file with SNP concatenate (default:False)', default=False)
+
+	parser.add_argument('--INDEL', dest='writeINDEL', 
+						action='store_true', help='Write a FASTA file with INDEL concatenate (default:False)', default=False)
+
+	return parser
+
+
+def write_fasta(outputFile, dicoResult):
+	"""
+	Write a multi FASTA file from dictionnary.
+	@param outputFile: output FASTA file name
+	@type outputFile: string
+	@param dicoResult: dictionnary with header for key and the list of nucleotide for value
+	@type dicoResult: dictionnary
+	"""
+
+	outTab = open(outputFile, "wb")
+
+	for element in dicoResult :
+		header = element.split('/')[-1]
+		outTab.write('>' + header + '\n')
+		sequence = ''.join(dicoResult[element])
+		i = 0
+		for nt in sequence :
+			outTab.write(nt)
+			i+=1
+			if i%70==0 :
+				outTab.write('\n')
+		outTab.write('\n\n')
+
+	outTab.close()	
+
+
+
+#main function	
+def main():
+
+
+	parser=get_parser()
+		
+	#print parser.help if no arguments
+	if len(sys.argv)==1:
+		parser.print_help()
+		sys.exit(1)
+
+	Arguments=parser.parse_args()
+
+
+	firstLine = True
+	listGenome = []
+	dicoResult_SNP = {}
+	dicoResult_INDEL = {}
+	dicoResult_ALL = {}
+
+	with open(Arguments.VCF, 'rb') as csvfile:
+		TSVreader = csv.reader(csvfile, delimiter='\t')
+
+		for row in TSVreader :
+
+			if("##" not in row[0]):
+
+				if firstLine :
+					nbGenomes = len(row) - 9
+					
+					for i in row[9:] :
+						dicoResult_SNP[i] = []
+						dicoResult_INDEL[i] = []
+						dicoResult_ALL[i] = []
+						listGenome.append(i)
+					firstLine = False
+					
+				else :
+				
+					variant = []
+					variant.append(row[3])
+					variantModif = []
+
+					if(row[4] != '.' and '*' not in row[4]):
+
+						variantModif.append(row[4].split(','))
+						variantModif = list(chain.from_iterable(variantModif))
+						variant = variant + variantModif
+
+						y = 0
+
+						skip = False
+
+						listeAlter = []
+
+						for i in row[9:] :
+							if('/' in i):
+								skip = True
+							else:	
+								var = i.split(":")[0]
+								if(var=='.'):
+									skip = True
+								if var not in listeAlter :
+									listeAlter.append(var)
+
+						#virer les AF==1		
+						if len(listeAlter)==1 :
+							skip = True			
+
+						if not skip :	
+							j = 0	
+							for i in row[9:] :
+								var = i.split(":")[0]
+
+								maxLen = 0
+								for baseVar in variant :
+									if len(baseVar) > maxLen :
+										maxLen = len(baseVar)
+								
+								if maxLen > 1 :
+									INDEL = True
+
+									if j == 0 :
+										variantGap = []
+										for baseVar in variant :
+											variantGap.append(baseVar + '-'*(maxLen-len(baseVar)))
+										variant = variantGap
+
+									dicoResult_INDEL[listGenome[y]].append(variant[int(var)])	
+
+								else :
+									dicoResult_SNP[listGenome[y]].append(variant[int(var)])
+								
+								dicoResult_ALL[listGenome[y]].append(variant[int(var)])
+
+								y += 1
+								j += 1
+
+
+	fasta_ALL = Arguments.output + '_ALL.fasta'
+	write_fasta(fasta_ALL, dicoResult_ALL)
+
+	if Arguments.writeSNP :
+		fasta_SNP = Arguments.output + '_SNP.fasta'
+		write_fasta(fasta_SNP, dicoResult_SNP)
+
+	if Arguments.writeINDEL :
+		fasta_INDEL = Arguments.output + '_INDEL.fasta'
+		write_fasta(fasta_INDEL, dicoResult_INDEL)		 
+			
+
+
+if __name__ == "__main__":
+	main()					

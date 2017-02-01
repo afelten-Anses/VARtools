@@ -1,0 +1,527 @@
+<?xml version="1.0" encoding="ascii"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+          "DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+  <title>GoXML</title>
+  <link rel="stylesheet" href="epydoc.css" type="text/css" />
+  <script type="text/javascript" src="epydoc.js"></script>
+</head>
+
+<body bgcolor="white" text="black" link="blue" vlink="#204080"
+      alink="#204080">
+<!-- ==================== NAVIGATION BAR ==================== -->
+<table class="navbar" border="0" width="100%" cellpadding="0"
+       bgcolor="#a0c0ff" cellspacing="0">
+  <tr valign="middle">
+
+  <!-- Tree link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="module-tree.html">Trees</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Index link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="identifier-index.html">Indices</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Help link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="help.html">Help</a>&nbsp;&nbsp;&nbsp;</th>
+
+      <th class="navbar" width="100%"></th>
+  </tr>
+</table>
+<table width="100%" cellpadding="0" cellspacing="0">
+  <tr valign="top">
+    <td width="100%">
+      <span class="breadcrumbs">
+        Module&nbsp;GoXML
+      </span>
+    </td>
+    <td>
+      <table cellpadding="0" cellspacing="0">
+        <!-- hide/show private -->
+        <tr><td align="right"><span class="options">[<a href="javascript:void(0);" class="privatelink"
+    onclick="toggle_private();">hide&nbsp;private</a>]</span></td></tr>
+        <tr><td align="right"><span class="options"
+            >[<a href="frames.html" target="_top">frames</a
+            >]&nbsp;|&nbsp;<a href="GoXML-module.html"
+            target="_top">no&nbsp;frames</a>]</span></td></tr>
+      </table>
+    </td>
+  </tr>
+</table>
+<!-- ==================== MODULE DESCRIPTION ==================== -->
+<h1 class="epydoc">Module GoXML</h1><p class="nomargin-top"><span class="codelink"><a href="GoXML-pysrc.html">source&nbsp;code</a></span></p>
+<p>GoXML workfow. In order to add GO-terms from a XML file and generate a
+  non-enriched universe of GO-terms.</p>
+
+<hr />
+<div class="fields">      <strong>Requires:</strong>
+      <ul class="nomargin-top">
+        <li>
+        <a href="https://www.python.org/downloads/" target="_top">python 
+        2.7</a> (tested with 2.7.6)
+        </li>
+        <li>
+        <a href="https://github.com/jamescasbon/PyVCF" 
+        target="_top">PyVCF</a>
+        </li>
+        <li>
+        <a href="https://github.com/lxml/lxml" target="_top">lxml</a>
+        </li>
+        <li>
+        GOtrimmer_xml
+        </li>
+      </ul>
+</div><!-- ==================== FUNCTIONS ==================== -->
+<a name="section-Functions"></a>
+<table class="summary" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr bgcolor="#70b0f0" class="table-header">
+  <td colspan="2" class="table-header">
+    <table border="0" cellpadding="0" cellspacing="0" width="100%">
+      <tr valign="top">
+        <td align="left"><span class="table-header">Functions</span></td>
+        <td align="right" valign="top"
+         ><span class="options">[<a href="#section-Functions"
+         class="privatelink" onclick="toggle_private();"
+         >hide private</a>]</span></td>
+      </tr>
+    </table>
+  </td>
+</tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">parser object</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="GoXML-module.html#get_parser" class="summary-sig-name">get_parser</a>()</span><br />
+      Arguments setting and parsing</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="GoXML-pysrc.html#get_parser">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">dictionnary</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="GoXML-module.html#readDBFile" class="summary-sig-name">readDBFile</a>(<span class="summary-sig-arg">fichier</span>)</span><br />
+      Read NP-EBI local storage file</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="GoXML-pysrc.html#readDBFile">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">dictionnary</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="GoXML-module.html#readDBGOFile" class="summary-sig-name">readDBGOFile</a>(<span class="summary-sig-arg">fichier</span>)</span><br />
+      Read EBI-GO local storage file</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="GoXML-pysrc.html#readDBGOFile">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">dictionnary</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="GoXML-module.html#extractNP" class="summary-sig-name">extractNP</a>(<span class="summary-sig-arg">path</span>)</span><br />
+      Retrieve NP ids from XML file</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="GoXML-pysrc.html#extractNP">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="GoXML-module.html#idmapping" class="summary-sig-name">idmapping</a>(<span class="summary-sig-arg">nplist</span>,
+        <span class="summary-sig-arg">dicoNP</span>,
+        <span class="summary-sig-arg">NPfile</span>)</span><br />
+      Make ID mapping from NP identifiers to Uniprot identifiers requesting
+      Online(Uniprot database) of Offline(NP-EBI_databases.tsv)</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="GoXML-pysrc.html#idmapping">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="GoXML-module.html#UNIPROTtoGO" class="summary-sig-name">UNIPROTtoGO</a>(<span class="summary-sig-arg">path</span>,
+        <span class="summary-sig-arg">output</span>,
+        <span class="summary-sig-arg">protlist</span>,
+        <span class="summary-sig-arg">dicoGO</span>,
+        <span class="summary-sig-arg">GOFile</span>)</span><br />
+      Make ID mapping from Uniprot identifiers to GO identifiers requesting
+      Online(Quick-GO database) of Offline(EBI-GO_databases.tsv)</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="GoXML-pysrc.html#UNIPROTtoGO">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="main"></a><span class="summary-sig-name">main</span>()</span></td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="GoXML-pysrc.html#main">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+</table>
+<!-- ==================== VARIABLES ==================== -->
+<a name="section-Variables"></a>
+<table class="summary" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr bgcolor="#70b0f0" class="table-header">
+  <td colspan="2" class="table-header">
+    <table border="0" cellpadding="0" cellspacing="0" width="100%">
+      <tr valign="top">
+        <td align="left"><span class="table-header">Variables</span></td>
+        <td align="right" valign="top"
+         ><span class="options">[<a href="#section-Variables"
+         class="privatelink" onclick="toggle_private();"
+         >hide private</a>]</span></td>
+      </tr>
+    </table>
+  </td>
+</tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a href="GoXML-module.html#__doc__" class="summary-name">__doc__</a> = <code title="&quot;&quot;&quot;
+GoXML workfow. In order to add GO-terms from a XML file and generate a\
+ non-enriched universe of GO-terms.
+
+@requires: U{python 2.7&lt;https://www.python.org/downloads/&gt;} (tested wi\
+th 2.7.6)
+@requires: U{PyVCF&lt;https://github.com/jamescasbon/PyVCF&gt;}
+@requires: U{lxml&lt;https://github.com/lxml/lxml&gt;}
+..."><code class="variable-ellipsis">...</code></code><br />
+      Arguments settings
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="__package__"></a><span class="summary-name">__package__</span> = <code title="None">None</code>
+    </td>
+  </tr>
+</table>
+<!-- ==================== FUNCTION DETAILS ==================== -->
+<a name="section-FunctionDetails"></a>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr bgcolor="#70b0f0" class="table-header">
+  <td colspan="2" class="table-header">
+    <table border="0" cellpadding="0" cellspacing="0" width="100%">
+      <tr valign="top">
+        <td align="left"><span class="table-header">Function Details</span></td>
+        <td align="right" valign="top"
+         ><span class="options">[<a href="#section-FunctionDetails"
+         class="privatelink" onclick="toggle_private();"
+         >hide private</a>]</span></td>
+      </tr>
+    </table>
+  </td>
+</tr>
+</table>
+<a name="get_parser"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">get_parser</span>()</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="GoXML-pysrc.html#get_parser">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Arguments setting and parsing</p>
+  <dl class="fields">
+    <dt>Returns: parser object</dt>
+        <dd>arguments list</dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="readDBFile"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">readDBFile</span>(<span class="sig-arg">fichier</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="GoXML-pysrc.html#readDBFile">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Read NP-EBI local storage file</p>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>fichier</code></strong> (.tsv file) - NP-EBI_databases.tsv file</li>
+    </ul></dd>
+    <dt>Returns: dictionnary</dt>
+        <dd>dictionnary of NP identifiers</dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="readDBGOFile"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">readDBGOFile</span>(<span class="sig-arg">fichier</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="GoXML-pysrc.html#readDBGOFile">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Read EBI-GO local storage file</p>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>fichier</code></strong> (.tsv file) - EBI-GO_databases.tsv file</li>
+    </ul></dd>
+    <dt>Returns: dictionnary</dt>
+        <dd>dictionnary of GO identifiers</dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="extractNP"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">extractNP</span>(<span class="sig-arg">path</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="GoXML-pysrc.html#extractNP">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Retrieve NP ids from XML file</p>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>path</code></strong> (string) - relative path to the XML file</li>
+    </ul></dd>
+    <dt>Returns: dictionnary</dt>
+        <dd>dictionnary of NP identifiers</dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="idmapping"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">idmapping</span>(<span class="sig-arg">nplist</span>,
+        <span class="sig-arg">dicoNP</span>,
+        <span class="sig-arg">NPfile</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="GoXML-pysrc.html#idmapping">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Make ID mapping from NP identifiers to Uniprot identifiers requesting 
+  Online(Uniprot database) of Offline(NP-EBI_databases.tsv)</p>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>nplist</code></strong> (list) - list used in ONLINE request --&gt; values = NP identifiers</li>
+        <li><strong class="pname"><code>dicoNP</code></strong> (dictionnary) - dictionnary used in OFFLINE request --&gt; keys = NP identifiers 
+          , values = uniprot id retrieved</li>
+        <li><strong class="pname"><code>NPfile</code></strong> (.tsv file) - Storage of uniprot identifiers to NP identifiers 
+          (NP-EBI_databases.tsv)</li>
+    </ul></dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="UNIPROTtoGO"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">UNIPROTtoGO</span>(<span class="sig-arg">path</span>,
+        <span class="sig-arg">output</span>,
+        <span class="sig-arg">protlist</span>,
+        <span class="sig-arg">dicoGO</span>,
+        <span class="sig-arg">GOFile</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="GoXML-pysrc.html#UNIPROTtoGO">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Make ID mapping from Uniprot identifiers to GO identifiers requesting 
+  Online(Quick-GO database) of Offline(EBI-GO_databases.tsv)</p>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>path</code></strong> (string) - relative path to the XML file</li>
+        <li><strong class="pname"><code>output</code></strong> (.txt file) - Universe of GO identifiers (univers.txt)</li>
+        <li><strong class="pname"><code>protlist</code></strong> (list) - list used in ONLINE request --&gt; values = UNIPROT identifiers</li>
+        <li><strong class="pname"><code>dicoGO</code></strong> (dictionnary) - dictionnary used in ONLINE requests --&gt; keys = Uniprot 
+          identifiers , values = GO identifiers list</li>
+        <li><strong class="pname"><code>GOFile</code></strong> (.tsv file) - Storage of uniprot identifiers to GO identifiers 
+          (EBI-GO_databases.tsv)</li>
+    </ul></dd>
+  </dl>
+</td></tr></table>
+</div>
+<br />
+<!-- ==================== VARIABLES DETAILS ==================== -->
+<a name="section-VariablesDetails"></a>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr bgcolor="#70b0f0" class="table-header">
+  <td colspan="2" class="table-header">
+    <table border="0" cellpadding="0" cellspacing="0" width="100%">
+      <tr valign="top">
+        <td align="left"><span class="table-header">Variables Details</span></td>
+        <td align="right" valign="top"
+         ><span class="options">[<a href="#section-VariablesDetails"
+         class="privatelink" onclick="toggle_private();"
+         >hide private</a>]</span></td>
+      </tr>
+    </table>
+  </td>
+</tr>
+</table>
+<a name="__doc__"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <h3 class="epydoc">__doc__</h3>
+  <p>Arguments settings</p>
+  <dl class="fields">
+  </dl>
+  <dl class="fields">
+    <dt>Value:</dt>
+      <dd><table><tr><td><pre class="variable">
+&quot;&quot;&quot;
+GoXML workfow. In order to add GO-terms from a XML file and generate a<span class="variable-linewrap"><img src="crarr.png" alt="\" /></span>
+ non-enriched universe of GO-terms.
+
+@requires: U{python 2.7&lt;https://www.python.org/downloads/&gt;} (tested wi<span class="variable-linewrap"><img src="crarr.png" alt="\" /></span>
+th 2.7.6)
+@requires: U{PyVCF&lt;https://github.com/jamescasbon/PyVCF&gt;}
+@requires: U{lxml&lt;https://github.com/lxml/lxml&gt;}
+<code class="variable-ellipsis">...</code>
+</pre></td></tr></table>
+</dd>
+  </dl>
+</td></tr></table>
+</div>
+<br />
+<!-- ==================== NAVIGATION BAR ==================== -->
+<table class="navbar" border="0" width="100%" cellpadding="0"
+       bgcolor="#a0c0ff" cellspacing="0">
+  <tr valign="middle">
+
+  <!-- Tree link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="module-tree.html">Trees</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Index link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="identifier-index.html">Indices</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Help link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="help.html">Help</a>&nbsp;&nbsp;&nbsp;</th>
+
+      <th class="navbar" width="100%"></th>
+  </tr>
+</table>
+<table border="0" cellpadding="0" cellspacing="0" width="100%%">
+  <tr>
+    <td align="left" class="footer">
+    Generated by Epydoc 3.0.1 on Fri Sep  2 22:16:41 2016
+    </td>
+    <td align="right" class="footer">
+      <a target="mainFrame" href="http://epydoc.sourceforge.net"
+        >http://epydoc.sourceforge.net</a>
+    </td>
+  </tr>
+</table>
+
+<script type="text/javascript">
+  <!--
+  // Private objects are initially displayed (because if
+  // javascript is turned off then we want them to be
+  // visible); but by default, we want to hide them.  So hide
+  // them unless we have a cookie that says to show them.
+  checkCookie();
+  // -->
+</script>
+</body>
+</html>

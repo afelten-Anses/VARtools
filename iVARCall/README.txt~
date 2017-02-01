@@ -1,0 +1,3 @@
+bgzip et tabix :
+apt-get install tabix
+

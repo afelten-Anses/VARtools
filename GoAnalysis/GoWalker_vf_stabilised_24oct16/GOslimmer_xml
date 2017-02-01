@@ -1,0 +1,114 @@
+#!/usr/bin/env python
+from __future__ import print_function, division
+import json
+from collections import defaultdict
+import os, sys
+import argparse 
+
+__doc__="""
+GOtrimmer script. In order to keep prokaryotic terms only in VCFtoGO universe output file, based on GOslim (GO-basic.obo)
+@requires: VCFtoGO output file (GO-terms universe)
+@requires: GO-basic.obo file (GOslim)
+"""
+
+
+def get_parser():
+    """
+    Parse arguments
+    @return: arguments list
+    @rtype: parser object
+    """
+
+    parser = argparse.ArgumentParser(description='In order to keep prokaryotic terms only in VCFtoGO universe output file, based on GOslim (GO-basic.obo)')
+
+    parser.add_argument('-i', action="store", dest='obo', 
+                        type=str, required=True, default=None, help='obo file (REQUIRED)')
+
+    parser.add_argument('-o', action="store", dest='output', 
+                        type=str, required=True, default="EBI-GO_prok.txt", help='output file (default:EBI-GO_prok.txt)')
+
+    return parser
+
+
+###################################################################################
+##GOtrimmer #### inspired from: http://stackoverflow.com/q/32989776/4014959
+###################################################################################
+##
+#GOAL: delete obsolete and non-prokaryotic GO-terms From VCFtoGO output file
+
+#################################################################
+#add id in object only if subset=go_subset_prok
+#################################################################
+
+
+def add_object(d, outputFile):
+
+    all_objects = {}
+
+    #print(json.dumps(d, indent = 4) + '\n')
+    #Ignore obsolete objects
+    output=open(outputFile,"a+")
+    if "is_obsolete" in d:
+        return
+
+    #Gather desired data into a single list,
+    # and store it in the main all_objects dict
+    key = d["id"][0]
+    is_a = d["subset"]
+    if not "gosubset_prok" in is_a:
+        is_a=""
+    else: 
+        output.write(str(key+str("\n")))
+    #Remove the next line if you want to keep the is_a description info
+    is_a = [s.partition(' ! ')[0] for s in is_a]
+    all_objects[key] = d["subset: gosubset_prok"] + is_a
+
+
+def main(): 
+
+    ##################### gets arguments #####################
+    parser=get_parser()
+    
+    #print parser.help if no arguments
+    if len(sys.argv)==1:
+        parser.print_help()
+        sys.exit(1)
+    
+    Arguments=parser.parse_args()
+
+
+    fname = Arguments.obo
+    term_head = "[Term]"
+    #Keep the desired object data here
+
+    #A temporary dict to hold object data
+    current = defaultdict(list)
+
+    with open(fname) as f:
+        #Skip header data
+        for line in f:
+            if line.rstrip() == term_head:
+                break
+
+        for line in f:
+            line = line.rstrip()
+            if not line:
+                #ignore blank lines
+                continue
+            if line == term_head:
+                #end of term
+                add_object(current, Arguments.output)
+                current = defaultdict(list)
+            else:
+                #accumulate object data into current
+                key, _, val = line.partition(": ")
+                current[key].append(val)
+
+    if current:
+        add_object(current, Arguments.output)    
+    print("GENERATING GO PROKARYOTIC DATABASE...")
+
+    print("ok")
+
+if __name__ == "__main__":
+    main()     

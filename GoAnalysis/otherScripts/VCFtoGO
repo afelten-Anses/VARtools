@@ -1,0 +1,474 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+import os, sys, time  
+import argparse       #arguments parser
+import uuid           #uuid filename format
+import vcf            #vcf parser
+import urllib,urllib2 #html requests
+
+__doc__="""
+VCFtoGO workfow. In order to generate non-enriched universe of GO-terms from a VCF.
+
+@requires: U{python 2.7<https://www.python.org/downloads/>} (tested with 2.7.6)
+@requires: U{PyVCF<https://github.com/jamescasbon/PyVCF>}
+@requires: GOtrimmer
+"""
+
+
+def get_parser():
+	"""
+	Arguments setting and parsing
+	@return: arguments list
+	@rtype: parser object
+	"""
+
+	parser = argparse.ArgumentParser(description='vcf file and/or vcf positions and output settings')
+
+
+	parser.add_argument('-i', action="store", dest='input', 
+						type=str, required=True, help='vcf file')
+
+	
+	parser.add_argument('-o', action="store", dest='output', 
+						type=str, required=True, help='output filename prefix', default="ListeGO")
+
+	
+	parser.add_argument('-p', action="store", dest='positions', 
+						type=str, required=False, help='optionnal positons filename and extension')
+
+
+	parser.add_argument('-d', action="store", dest='NPdatabases', 
+						type=str, required=False, help='NP --> uniprot database')
+
+
+	parser.add_argument('-g', action="store", dest='GOdatabases', 
+						type=str, required=False, help='uniprot --> GO database')
+
+	return parser
+
+
+#########################################################################################
+#######################READ LOCAL FILES (tsv databases)##################################
+#########################################################################################
+
+
+def readDBFile(fichier): 
+	"""
+	Read NP-EBI local storage file
+	@param fichier: NP-EBI_databases.tsv file
+	@type fichier: .tsv file
+	@return: dictionnary of NP identifiers
+	@rtype: dictionnary
+	"""
+
+	#save ID mapping correspondences in a dictionnary
+	##Read NP-EBI-databases.tsv
+	f = open(fichier, 'r')
+	lines = f.readlines()
+	f.close()
+	dico = {}
+
+	for line in lines :
+		line = line.rstrip()
+		liste = line.split('\t')
+		if len(liste)>1:
+			dico[liste[0]] = liste [1]
+
+	return dico	
+
+
+def readDBGOFile(fichier): #save GO retriving correspondences in a dictionnary
+	"""
+	Read EBI-GO local storage file
+	@param fichier: EBI-GO_databases.tsv file
+	@type fichier: .tsv file
+	@return: dictionnary of GO identifiers
+	@rtype: dictionnary
+	"""
+	#Read GO-EBI-databases.tsv
+	f = open(fichier, 'r')
+	lines = f.readlines()
+	f.close()
+	dico = {}
+	for line in lines :
+		line = line.rstrip()
+		liste = line.split('\t')
+		uniprotID = liste[0]
+		if len(liste)>1:
+			GOterms = liste[1].split(';')
+			dico[uniprotID] = GOterms
+	return dico	
+
+
+#######################################################################################################################
+#VCF NP IDS EXTRACTION#################################################################################################
+#######################################################################################################################
+
+#Parse vcf nps ids and positions
+def extractinfopos(fichier,pos):
+	"""
+	Parse NP identifiers from VCF file
+	@param fichier: VCF file
+	@type fichier: .vcf file
+	@return: dictionnary of NP identifiers
+	@rtype: dictionnary
+	"""
+	
+	print "\nPARSING VCF..."
+	#COUNTER
+	t0=time.time()
+	nb=0
+	#/COUNTER
+	dicoextract={}
+	blanklines=0 #In case of SNPeff annotation blank lines , count it
+
+	#open vcf.Reader object which replaces vcf file for next processes
+	vcf_reader=vcf.Reader(open(fichier,'r'))
+	
+	### PROCESS 1 If there is no positions file ###
+	if pos==None:
+		
+		for record in vcf_reader:
+			nb+=1
+			#In case of blank SNPEff ANNs
+			try:
+				#ann corresponds to ANN record.INFO object
+				ann=record.INFO['ANN'] 
+				"""
+				record.INFO['ANN'] method didnt return a str
+				browse ann=record.INFO['ANN'] in order to retrieve its value
+				"""
+				for valeur_ann in ann: 
+
+					#split in order to retrieve NP column from ANN table
+					lignenp=valeur_ann.split('|')
+					#retrieve NP 
+					if "NP_" in lignenp[6]: 
+						dicoextract[record.POS]=lignenp[6]
+			except:
+				blanklines+=1
+			sys.stdout.write("\r{0} lines passed".format(nb))
+				
+
+	### PROCESS 2 If position file was given  ###		
+	else:
+
+		#Store asked positions in a list
+		lignetxt=[] 
+		i=0
+		
+		with open(pos,'r') as sourcepos:
+
+			lignespos=sourcepos.readlines()
+
+			for positiontxt in lignespos:
+
+				lignetxt.append(positiontxt)
+
+			#Compare list and vcf positions
+			for record in vcf_reader:
+				nb+=1
+
+				#if list position = vcf positon , analyse and add position and NP(if annotated by SNPeff) to dicoextract
+				if int(lignetxt[i])==int(record.POS):
+					i+=1
+
+					if int(i)==int(len(lignetxt)):
+						#if out of range-->all positions processed,so get out of loop
+						break
+
+					else:
+
+						try:
+
+							ann=record.INFO['ANN'] 
+							for valeur_ann in ann: 
+
+								lignenp=valeur_ann.split('|')
+
+								if "NP_" in lignenp[6]: 
+									dicoextract[record.POS]=lignenp[6]
+
+
+						except:
+
+							blanklines+=1
+
+					sys.stdout.write("\r{0} lines passed".format(nb))
+		
+
+
+	print " ok: processed in",int(time.time()-t0),"seconds"
+
+	if int(blanklines)>0:
+
+		print "Warning : finished with "+str(blanklines)+" line(s) without SNPEff annotation"
+		time.sleep(1)
+
+	return dicoextract
+
+
+#######################################################################################################################
+#CONVERSION FROM REFSEQ_ID TO UNIPROT_ID ##############################################################################
+#######################################################################################################################
+
+def idmapping(dico, dicoNP, NPfile): # ID mapping NP identifiers from VCF file
+									 # dico: control if actual NP id is avaiaible in dicoNP (which stores all nps to uniprot ids)
+	"""
+	Make ID mapping from NP identifiers to Uniprot identifiers requesting Online(Uniprot database) of Offline(NP-EBI_databases.tsv)
+	@param dico : dictionnary used in ONLINE request --> keys = NP identifiers , values = uniprot id retrieved
+	@type dico: dictionnary 
+	@param dicoNP : dictionnary used in OFFLINE request --> keys = NP identifiers , values = uniprot id retrieved
+	@type dicoNP: dictionnary
+	@param NPfile : Storage of uniprot identifiers to NP identifiers (NP-EBI_databases.tsv)
+	@type NPfile: .tsv file
+	"""
+
+	print "\nID MAPPING..."
+	#COUNTER
+	t0=time.time()
+	nb2=0
+	#/COUNTER
+
+	for key_np in dico.keys():
+
+		nb2+=1 
+
+		if dico[key_np] in dicoNP and dico[key_np]!='':
+
+			dico[key_np]=dicoNP[dico[key_np]]
+
+
+		else :	
+
+			page=None	# Page: useful in order to verify if the online request was sucessfull;
+						#if page!=None : request completed. 
+			
+			while page==None: #If (while) request not completed, retry
+
+				try :
+
+					#RETRIEVE UNIPROT ID FROM NP ID
+					#Custom url in order to retrieve Uniprot ids from NP ids
+					url = 'http://www.uniprot.org/uniprot/?query='+str(dico[key_np])+',&columns=id&format=list'
+
+					#Requete as user-agent "Python"
+					request = urllib2.Request(url)
+					request.add_header('User-Agent', 'Python %s')
+					response = urllib2.urlopen(request)
+					"""
+					response=page=ID uniprot
+					""" 
+					page = response.read()
+
+					#STORE the new NP to Uniprot Id in local NP-EBI-databases.tsv if not already exists
+					f = open(NPfile,'a')
+					if (len(str(page))>0) :
+						if page not in f.readlines(): #Fix 05.08.16
+							f.write(str(dico[key_np]) + '\t' + str(page))
+					f.close()
+
+					##ADD this new NP to UNiprot id in dicoNP in order to retrieve offline immediattly (id may be in next requests)
+					dicoNP[dico[key_np]]=page
+					dico[key_np]=page
+
+					sys.stdout.write("\r{0} ID's mapped".format(nb2))
+
+				except urllib2.URLError: #Retry in case of timeout
+
+					print "\nRe-trying..."
+					time.sleep(5)
+					pass	
+
+		sys.stdout.write("\r{0} ID's mapped".format(nb2))			
+
+	print " ok: processed in",int(time.time()-t0),"seconds"
+
+
+#######################################################################################################################
+#GO-TERMS RETRIEVING FROM  UNIPROT_IDs#################################################################################
+#######################################################################################################################
+
+def UNIPROTtoGO(dico,output,pos, dicoGO, GOfile):  	#Uniprot to GO ids mapping : store results in a file
+															#dico: store TRANSCRIPT NP ids 
+															#dicogo (control duplicates) != dicoGO (write results in a file)
+	"""
+	Make ID mapping from Uniprot identifiers to GO identifiers requesting Online(Quick-GO database) of Offline(EBI-GO_databases.tsv)
+	@param dico: dictionnary used in OFFLINE requests --> keys = Uniprot identifiers , values = GO identifiers list
+	@type dico : dictionnary
+	@param output: Universe of GO identifiers (univers.txt)
+	@type output: .txt file
+	@param pos: positions requested if -pos argument was used
+	@type pos: int
+	@param dicoGO : dictionnary used in ONLINE requests --> keys = Uniprot identifiers , values = GO identifiers list
+	@type dicoGO: dictionnary
+	@param GOfile: Storage of uniprot identifiers to GO identifiers (EBI-GO_databases.tsv)
+	@type GOfile: .tsv file
+	"""
+	
+	#COUNTER
+	t0=time.time()
+	nb3=0
+	#/COUNTER
+
+	print "\nGO TERMS RETRIEVING..."
+
+	#retrieve filename entered by user
+	filename=str(output)
+
+	#use filename for file creation (filename+date+uuid)
+	output=open(time.strftime(filename+'_'+'%y%m%d')+"_UID"+str(uuid.uuid4())+".txt","w")
+
+	if pos==None:
+		output2=open('deleteme.tmp',"w") #optional output #if filename="deleteme" --> file flagged for deletion and not processed (but writed as .tmp) if POSITIONS was not asked
+
+	else:
+		output2=open(time.strftime(filename+'_POSITIONS'+'%y%m%d'+'.csv'),"w") #optional output with GO:ID and associed position
+
+	#For each keys(positions) of uniprot IDs
+	for key_unip in dico.keys(): 
+		dicogo={}
+		uniprot = dico[key_unip]
+		"""
+		Dicogo : temporary dictionnary.
+		Go-term key-->avoid clones for each GO:term for a same position,
+		BUT inter-positions clones already permitted (because dicogo cleared for each uniprot ID)
+		"""
+		nb3+=1
+		sys.stdout.write("\r{0} Uniprot ID's to go conversions".format(nb3))
+		if uniprot in dicoGO and uniprot!='':
+
+			for term in dicoGO[uniprot]:
+				output.write(term + '\n')
+				output2.write(term+str(";")+str(key_unip)+str('\n'))
+
+
+		elif(uniprot!=''):	
+
+			#security if goterm wasn't downloaded
+			goterm=None
+			while goterm==None:
+
+				try:
+
+					urllib.urlretrieve('http://www.ebi.ac.uk/QuickGO/GAnnotation?protein='+str(dico[key_unip])+'&col=goID,aspect&format=tsv','annotation.tsv')
+
+					#retrieve .tsv file which contains GO IDs for this Uniprot ID
+					with open('annotation.tsv','r') as sourcetmp:
+
+						lignestmp=sourcetmp.readlines()
+
+						for goterm in lignestmp:
+
+							#format GO:xxx_aspect. split aspect and goID 
+							goterm=goterm.split() 
+							#avoid GOterms clones (for a same positon) and wrong values
+							if goterm[0] not in dicogo.keys() and goterm[0]!="GO":  #avoid GOterms clones (for a same positon) and wrong values
+								output.write(goterm[0]+str('\n'))
+								output2.write(goterm[0]+str(";")+str(key_unip)+str('\n')) #csv format (GOterm;Position)
+								if goterm[0]!='':
+									dicogo[goterm[0]]=key_unip
+							
+
+					#clear previous value (Uniprot ID) if no associated GO term for this key (useful for next step)
+					dicoGO[uniprot] = []
+					dico[key_unip]="" 
+
+
+					for goterms in dicogo.keys():
+
+						#convert dico (alias dicoextract) at GO:position format. For retriving GOterms and linked positions if needed next
+						dico[key_unip]=str(goterms) 
+						dicoGO[uniprot].append(goterms)	
+
+					#add results in GO-EBI_databases.tsv
+					f = open(GOfile,'a+')
+
+					if uniprot not in f.readlines():  #fix 05.05.16		
+						f.write(uniprot + '\t' + ';'.join(dicoGO[uniprot]) + '\n')		
+						f.close()		
+
+				#In case of error (usually error403),retry the request after 5 seconds
+				except urllib2.URLError:
+
+					print "\nRe-trying..."
+					nb3-=1
+					time.sleep(5)
+					pass	
+
+
+	output.close()
+	#Delete last temporary files
+	if os.path.exists('annotation.tsv'):
+		os.system('rm annotation.tsv')
+	#If file flagged for deletion exists,delete it
+	if os.path.exists('deleteme.tmp'):
+		os.system('rm deleteme.tmp')
+	os.system("python GOtrimmer.py -i "+str(output)) # Trimming non proka terms from output 
+
+	print " ok: processed in ",int(time.time()-t0)," seconds"
+
+#######################################################################################################################
+#MAIN##################################################################################################################
+#######################################################################################################################
+
+def main():	
+	
+	#################counter initialisation ########################
+	t1=time.time()
+	##################### get parser ###############################
+	parser=get_parser()
+
+	######## Print parser help if arguments missed #################
+	if len(sys.argv)==1:
+		parser.print_help()
+		sys.exit(1)
+	
+	##################  Manage Arguments  ##########################
+
+	#Parse arguments
+	Arguments=parser.parse_args()
+
+	dicoextract=extractinfopos(Arguments.input,Arguments.positions)
+
+	#if NP correspondence file already exists manage it, else write it
+	if Arguments.NPdatabases :
+		dicoNP = readDBFile(Arguments.NPdatabases)
+		idmapping(dicoextract,dicoNP,Arguments.NPdatabases)
+	
+	else :
+		dicoNP = {}
+		Arguments.NPdatabases = "NP-EBI_databases.tsv"
+		f = open("NP-EBI_databases.tsv",'w')
+		dicoNP=readDBFile(Arguments.NPdatabases)
+		f.close()
+		#and start id mapping with the correct arguments
+		idmapping(dicoextract,dicoNP,Arguments.NPdatabases)
+		
+
+	
+
+	#if NP correspondence file already exists manage it, else write it
+	if Arguments.GOdatabases :
+		dicoGO = readDBGOFile(Arguments.GOdatabases)
+		#and start GO retrieving with the correct arguments
+		UNIPROTtoGO(dicoextract,Arguments.output,Arguments.positions,dicoGO,Arguments.GOdatabases)
+
+	else :
+		dicoGO = {}
+		Arguments.GOdatabases = "EBI-GO_databases.tsv"
+		f = open("EBI-GO_databases.tsv",'w')
+		dicoGO = readDBGOFile(Arguments.GOdatabases)
+		f.close()	
+		#and start GO retrieving with the correct arguments
+		UNIPROTtoGO(dicoextract,Arguments.output,Arguments.input,Arguments.positions,dicoGO,Arguments.GOdatabases)
+	
+	print "\n====================================================================\nSCRIPT FINISHED IN ",int((time.time()-t1)),"SECONDS"
+	print"===================================================================="
+	print dicoGO
+
+#############################################################################
+#Do not execute the script if it was imported as a module!
+if __name__ == "__main__":													
+	main()												
+#############################################################################

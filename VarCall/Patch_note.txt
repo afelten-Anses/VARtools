@@ -1,0 +1,11 @@
+Patch note VARCall v2:
+- résolutions de bug bloquant la suppression de certains fichiers temporaires avec l'option --removeTmpFiles
+- vérification des fichiers d'entrée
+- ajout d'un filtre supplémentaire sur les VCF 
+	--> suppression des variants uniquement présent dans la référence
+	--> suppression des variants pour lesquels il n'y a pas d'informations dans au moins un génome
+	--> suppression des InDels si un SNP existe à la même position
+- génération automatique d'un rapport pdf
+- ordonnancement des sorties du workflow
+- amélioration du suivis du workflow dans le terminal
+- génération de la doc technique html et pdf
