@@ -33,7 +33,10 @@ def get_parser():	#Parse arguments
 
 
 	parser.add_argument('-xml', action="store", dest='Xml', 
-						type=str, required=True, help='XML input file obtained by GoXML script')
+						type=str, required=True, help='XML input file obtained by GoXML script to compute the universe of GOs')
+
+	parser.add_argument('-xmlcomp', action="store", dest='XmlComp', 
+						type=str, required=True, help='XML input file obtained by GoXML script to analyse')	
 
 	parser.add_argument('-comp', action="store", dest='Comp', 
 						type=str, required=True, nargs='+', help='XML comparisons values in ascending order')
@@ -140,18 +143,23 @@ def everygo(compvalues,view,xmlname,Rpath):
 		print 'GO-terms enrichment Analysis for <COMPARISON value="'+str(numxml)+'">'
 		os.system("R --vanilla --slave --args "+" "+ str(numxml)+" /go_ech.txt "+ str(numxml) + " < " + Rpath + "GoWalker")
 
-		#cleaning Gowalker final output (hyperesults.txt)
-		os.system('cat '+str(numxml)+'/hyperesults_bp.txt | awk \'{print $0 ";BP"}\' > '+str(numxml)+'/hyperesults.txt')
+		#cleaning Gowalker temporary output (hyperesults.txt)
+		os.system('cat '+str(numxml)+'/hyperesults_bp.txt | awk \'{print $0 ";BP"}\' > '+str(numxml)+'/hyperesults.txt') # add Aspect tag
 		os.system('cat '+str(numxml)+'/hyperesults_mf.txt | awk \'{print $0 ";MF"}\' >> '+str(numxml)+'/hyperesults.txt')
 		os.system('cat '+str(numxml)+'/hyperesults_cc.txt | awk \'{print $0 ";CC"}\' >> '+str(numxml)+'/hyperesults.txt')
-			
-		#generating Goview temporary input file (Enrichment_analysis_results.txt)
+		os.system('sed -i \'0,/BP/s//Aspect/\' '+str(numxml)+'hyperesults.txt') # Correcting header name
+		os.system('sed -i \'0,/CC/s//Aspect/\' '+str(numxml)+'hyperesults.txt')
+		os.system('sed -i \'0,/MF/s//Aspect/\' '+str(numxml)+'hyperesults.txt')
+		os.system('sort -r '+str(numxml)+'/hyperesults.txt') # keep one header
+		os.system('sed 1d '+str(numxml)+'/hyperesults.txt -i')
+		os.system('sed 1d '+str(numxml)+'/hyperesults.txt -i')
+		#add GO ASPECT INFO for Goview (Enrichment_analysis_results.txt)
 		os.system('cut -d ";" -s -f 4,5 '+str(numxml)+'/hyperesults_bp.txt | awk \'{print $0 ";BP"}\' > '+str(numxml)+'/hyperesults_all.txt')
 		os.system('cut -d ";" -s -f 4,5 '+str(numxml)+'/hyperesults_mf.txt | awk \'{print $0 ";MF"}\' >> '+str(numxml)+'/hyperesults_all.txt')
 		os.system('cut -d ";" -s -f 4,5 '+str(numxml)+'/hyperesults_cc.txt | awk \'{print $0 ";CC"}\' >> '+str(numxml)+'/hyperesults_all.txt')
-		os.system("sort -r "+str(numxml)+"/hyperesults_all.txt | uniq | sed '1d'| sed '1d' | sed '1d' > "+str(numxml)+"/hyperesults_all_final.txt")
-		os.system("sed -i '1i Golevel;Pvalue;Aspect' "+str(numxml)+"/hyperesults_all_final.txt")
-		os.system("cat "+str(numxml)+"/hyperesults_all_final.txt | tr '\"' '0' > "+str(numxml)+"/Enrichment_analysis_results.txt")
+		os.system("sort -r "+str(numxml)+"/hyperesults_all.txt | uniq | sed '1d'| sed '1d' | sed '1d' > "+str(numxml)+"/hyperesults_all_final.txt") #keep one header
+		os.system("sed -i '1i Golevel;Pvalue;Aspect' "+str(numxml)+"/hyperesults_all_final.txt") 
+		os.system("cat "+str(numxml)+"/hyperesults_all_final.txt | tr '\"' '0' > "+str(numxml)+"/Enrichment_analysis_results.txt") #cleaning output
 
 		#OPTIONNAL GRAPHICAL REPRESENTATION
 		if view:
@@ -159,7 +167,10 @@ def everygo(compvalues,view,xmlname,Rpath):
 			os.system("R --vanilla --slave --args "+" "+ str(numxml)+" < " + Rpath + "GoView")
 
 		#remove temporary files
-		os.system('rm '+str(numxml)+'/hyperesults_* '+str(numxml)+'/go* '+str(numxml)+'/Enrichment_analysis_results.txt')
+		#os.system('rm '+str(numxml)+'/hyperesults_* '+str(numxml)+'/go* '+str(numxml)+'/Enrichment_analysis_results.txt')
+
+		#FINAL OUTPUT: 	For GoWalker --> str(numxml)/Enrichment_analysis_results.txt (tabulated text)
+		# 				For GoView --> str(numxml)/GO_distribution.pdf
 
 																										
 		
@@ -188,10 +199,11 @@ def main():
 		makeuniverse(Arguments.Xml)
 
 	#Then, make enrichment analysis for every comparison n° choosed
-	everygo(Arguments.Comp,Arguments.View,Arguments.Xml,Arguments.Rpath)
+	everygo(Arguments.Comp,Arguments.View,Arguments.XmlComp,Arguments.Rpath)
 	#Remove temporary file
 	os.system('rm univers.txt')
-
+	#FINAL OUTPUT: 	For GoWalker --> str(numxml)/Enrichment_analysis_results.txt (tabulated text)
+	# 				For GoView --> str(numxml)/GO_distribution.pdf
 
 
 #############################################################################

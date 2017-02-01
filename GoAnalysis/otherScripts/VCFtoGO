@@ -262,7 +262,7 @@ def idmapping(dico, dicoNP, NPfile): # ID mapping NP identifiers from VCF file
 					page = response.read()
 
 					#STORE the new NP to Uniprot Id in local NP-EBI-databases.tsv if not already exists
-					f = open(NPfile,'a')
+					f = open(NPfile,'a+')
 					if (len(str(page))>0) :
 						if page not in f.readlines(): #Fix 05.08.16
 							f.write(str(dico[key_np]) + '\t' + str(page))
@@ -317,13 +317,14 @@ def UNIPROTtoGO(dico,output,pos, dicoGO, GOfile):  	#Uniprot to GO ids mapping :
 	filename=str(output)
 
 	#use filename for file creation (filename+date+uuid)
-	output=open(time.strftime(filename+'_'+'%y%m%d')+"_UID"+str(uuid.uuid4())+".txt","w")
+	outputname=time.strftime(("VCFtoGOresults/"+str(filename)+'_'+'%y%m%d')+"_UID"+str(uuid.uuid4())+".txt")
+	output=open(str(outputname),"w")
 
 	if pos==None:
 		output2=open('deleteme.tmp',"w") #optional output #if filename="deleteme" --> file flagged for deletion and not processed (but writed as .tmp) if POSITIONS was not asked
 
 	else:
-		output2=open(time.strftime(filename+'_POSITIONS'+'%y%m%d'+'.csv'),"w") #optional output with GO:ID and associed position
+		output2=open(time.strftime("VCFtoGOresults/"+str(filename)+'_POSITIONS'+'%y%m%d'+'.csv'),"w") #optional output with GO:ID and associed position
 
 	#For each keys(positions) of uniprot IDs
 	for key_unip in dico.keys(): 
@@ -398,13 +399,14 @@ def UNIPROTtoGO(dico,output,pos, dicoGO, GOfile):  	#Uniprot to GO ids mapping :
 
 
 	output.close()
+	os.system("python GOtrimmer -i "+str(outputname)) # Trimming non proka terms of the output (=input of Gotrimmer)
 	#Delete last temporary files
 	if os.path.exists('annotation.tsv'):
 		os.system('rm annotation.tsv')
 	#If file flagged for deletion exists,delete it
 	if os.path.exists('deleteme.tmp'):
 		os.system('rm deleteme.tmp')
-	os.system("python GOtrimmer.py -i "+str(output)) # Trimming non proka terms from output 
+	
 
 	print " ok: processed in ",int(time.time()-t0)," seconds"
 
@@ -438,8 +440,8 @@ def main():
 	
 	else :
 		dicoNP = {}
-		Arguments.NPdatabases = "NP-EBI_databases.tsv"
-		f = open("NP-EBI_databases.tsv",'w')
+		Arguments.NPdatabases ="../db/NP-EBI_databases.tsv"
+		f = open("../db/NP-EBI_databases.tsv",'w')
 		dicoNP=readDBFile(Arguments.NPdatabases)
 		f.close()
 		#and start id mapping with the correct arguments
@@ -456,16 +458,15 @@ def main():
 
 	else :
 		dicoGO = {}
-		Arguments.GOdatabases = "EBI-GO_databases.tsv"
-		f = open("EBI-GO_databases.tsv",'w')
+		Arguments.GOdatabases = "../db/EBI-GO_databases.tsv"
+		f = open("../db/EBI-GO_databases.tsv",'w')
 		dicoGO = readDBGOFile(Arguments.GOdatabases)
 		f.close()	
 		#and start GO retrieving with the correct arguments
-		UNIPROTtoGO(dicoextract,Arguments.output,Arguments.input,Arguments.positions,dicoGO,Arguments.GOdatabases)
+		UNIPROTtoGO(dicoextract,Arguments.output,Arguments.positions,dicoGO,Arguments.GOdatabases)
 	
 	print "\n====================================================================\nSCRIPT FINISHED IN ",int((time.time()-t1)),"SECONDS"
 	print"===================================================================="
-	print dicoGO
 
 #############################################################################
 #Do not execute the script if it was imported as a module!

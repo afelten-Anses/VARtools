@@ -13,14 +13,9 @@ GoXML workfow. In order to add GO-terms from a XML file and generate a non-enric
 @requires: U{python 2.7<https://www.python.org/downloads/>} (tested with 2.7.6)
 @requires: U{PyVCF<https://github.com/jamescasbon/PyVCF>}
 @requires: U{lxml<https://github.com/lxml/lxml>}
+@requires: GOslimmer_xml
 """
 
-##################
-##GOtoXML V 5.00##
-##################
-"""
-Arguments settings
-"""
 
 def get_parser():
 	"""
@@ -29,27 +24,31 @@ def get_parser():
 	@rtype: parser object
 	"""
 
-	parser = argparse.ArgumentParser(description='Add GO-terms from a XML file and generate a non-enriched universe of GO-terms')
+	parser = argparse.ArgumentParser(description=' d- and -g are optional')
 
 
 	parser.add_argument('-i', action="store", dest='input', 
-						type=str, required=True, help='XML input file obtained by FixedVar scripts')
+						type=str, required=True, help='XML file (REQUIRED)')
+
+
+	parser.add_argument('-obo', action="store", dest='obo', 
+						type=str, required=True, help='obo (REQUIRED)')
 
 
 	parser.add_argument('-o', action="store", dest='output', 
-						type=str, required=True, help='output prefix')
-
-
-	parser.add_argument('-p', action="store", dest='goprok', 
-						type=str, required=True, help='list of procaryote GO termes')
+						type=str, required=True, help='output file (REQUIRED)')
 
 
 	parser.add_argument('-d', action="store", dest='NPdatabases', 
-						type=str, required=False, help='NP --> uniprot table (built if not specified)')
+						type=str, required=False, help='NP --> uniprot database')
 
 
 	parser.add_argument('-g', action="store", dest='GOdatabases', 
-						type=str, required=False, help='uniprot --> GO table (built if not specified)')
+						type=str, required=False, help='uniprot --> GO database')
+
+
+	parser.add_argument('--withHomoplasy', dest='withHomoplasy', action='store_true', help='keep homoplasy variants (default:False)', default=False)
+
 
 
 	return parser
@@ -62,6 +61,7 @@ def get_parser():
 
 
 def readDBFile(fichier): # Read NP to Uniprot ids correspondances from local storage
+
 	"""
 	Read NP-EBI local storage file
 	@param fichier: NP-EBI_table.tsv file
@@ -122,7 +122,7 @@ def readDBGOFile(fichier): ##Same goal as readBBFile, applied for Uniprot to GO 
 #######################################################################################################################
 
 
-def extractNP(path): #Retrieve NP ids from XML file
+def extractNP(path, withHomoplasy): #Retrieve NP ids from XML file
 	"""
 	Retrieve NP ids from XML file
 	@param path : relative path to the XML file
@@ -136,7 +136,7 @@ def extractNP(path): #Retrieve NP ids from XML file
 	#counter
 	t0=time.time()
 	nb=0
-	#/counter
+
 
 	#Store list of ALL transcrit ids( NP_xxx, STM_xxx, and every other ids )
 	nplist=[] 
@@ -147,14 +147,22 @@ def extractNP(path): #Retrieve NP ids from XML file
 	tree =etree.parse(pathvar,parser)
 	root = tree.getroot()
 	###XML Parsing from root: end
-
 	
-	for nps in tree.xpath("NODE/COMPARISON/VARIANTS/VARIANT/REGION/TRANSCRIT"):
+	for var in tree.xpath("NODE/COMPARISON/VARIANTS/VARIANT"):
 
-		#For the elements contained between "TRANSCRIT" markups, catch (em all!) and store them in nplist[]:
-		nplist.append(nps.text)
-		nb+=1
-		sys.stdout.write("\r{0} <TRANSCRIPT> fields passed".format(nb))
+		homop = var.findall('HOMOPLASY')[0]
+		
+		if(homop.text == "Yes" and not withHomoplasy):
+			break
+
+		for nps in var.xpath("REGION/TRANSCRIT"):	
+
+		#for nps in tree.xpath("NODE/COMPARISON/VARIANTS/VARIANT/REGION/TRANSCRIT"):
+
+			#For the elements contained between "TRANSCRIT" markups, catch (em all!) and store them in nplist[]:
+			nplist.append(nps.text)
+			nb+=1
+			sys.stdout.write("\r{0} <TRANSCRIPT> fields passed".format(nb))
 
 	print "\n--> ok: processed in",int(time.time()-t0),"seconds"
 
@@ -191,8 +199,9 @@ def idmapping(nplist,dicoNP,NPfile): # ID mapping from NP LIST (not from XML, bc
 
 	#DicoNP store every NP to Uniprot ids
 	for np in range(len(nplist)):
+		print np
 		#For every NP in list, if they exists in DicoNP (from local file), store them in protlist 
-		if nplist[np] in dicoNP and "NP_" in nplist[np] and nplist[np]!='':
+		if nplist[np] in dicoNP and "P_" in nplist[np] and nplist[np]!='':
 
 			protlist[np]=dicoNP[nplist[np]] 
 			#---> now: protlist= list of uniprot ids values
@@ -203,7 +212,7 @@ def idmapping(nplist,dicoNP,NPfile): # ID mapping from NP LIST (not from XML, bc
 			#if page!=None : request completed. 
 			page=None
 
-			if "NP_" in nplist[np]:
+			if "P_" in nplist[np]:
 
 				while page==None: #While request is not completed, retry.
 
@@ -222,6 +231,9 @@ def idmapping(nplist,dicoNP,NPfile): # ID mapping from NP LIST (not from XML, bc
 						#STORE the new NP to Uniprot Id in local NP-EBI-databases.tsv if not already exists
 						f = open(NPfile,'a+')
 						if (len(str(page))>0) :
+							#print "init:" + page
+							page = page.split('\n')[0] + '\n'
+							#print "final:" + page #### AAAAAAAAAAAAAAAAAAAAAAAAAAA
 							if page not in f.readlines(): #Fix 05.08.16
 								f.write(str(nplist[np]) + '\t' + str(page))
 						f.close()
@@ -244,7 +256,7 @@ def idmapping(nplist,dicoNP,NPfile): # ID mapping from NP LIST (not from XML, bc
 		nb2+=1
 		sys.stdout.write("\r{0} ID's mapped".format(nb2))
 
-	print "\n--> ok: processed in",int(time.time()-t0),"seconds"
+	#print "\n--> ok: processed in",int(time.time()-t0),"seconds"
 
 	return protlist
 
@@ -254,7 +266,7 @@ def idmapping(nplist,dicoNP,NPfile): # ID mapping from NP LIST (not from XML, bc
 #######################################################################################################################
 
 
-def UNIPROTtoGO(path,output,protlist,dicoGO,GOFile,goprokFile): #Uniprot to GO ids mapping and XML edition with GO-finformations add between <TRANSCRIPT> markups
+def UNIPROTtoGO(path,output,protlist,dicoGO,GOFile,GO_prok): #Uniprot to GO ids mapping and XML edition with GO-finformations add between <TRANSCRIPT> markups
 	"""
 	Make ID mapping from Uniprot identifiers to GO identifiers requesting Online(Quick-GO database) of Offline(EBI-GO_databases.tsv)
 	@param path : relative path to the XML file
@@ -267,10 +279,8 @@ def UNIPROTtoGO(path,output,protlist,dicoGO,GOFile,goprokFile): #Uniprot to GO i
 	@type dicoGO: dictionnary
 	@param GOFile: Storage of uniprot identifiers to GO identifiers (EBI-GO_databases.tsv)
 	@type GOFile: string
-	@param goprokFile: file contained the list of procaryote go terms
-	@type goprokFile: string
 	"""
-	
+
 	print "\nGO TERMS RETRIEVING..."
 	#counter initialisation
 	t0=time.time()
@@ -278,7 +288,7 @@ def UNIPROTtoGO(path,output,protlist,dicoGO,GOFile,goprokFile): #Uniprot to GO i
 	tsvname="annotation"+str(uuid.uuid4())+".tsv"
 	#/counter initialisation
 	filename=str(output) #filename: name of XML output that will contain GO-informations
-	outputFile = open(filename + '.xml', "w") #see above
+	outputFile = open(filename, "w") #see above
 
 	i=0 #control uniprot ids list reading
 
@@ -290,12 +300,11 @@ def UNIPROTtoGO(path,output,protlist,dicoGO,GOFile,goprokFile): #Uniprot to GO i
 	root = tree.getroot()
 	regions = root.findall("NODE/COMPARISON/VARIANTS/VARIANT/REGION") #Find all informations contained between <REGION> markups
 	###XML Parsing from root: end
-	#Proca terms list initialisation
-	with open(goprokFile) as termsprok:
+	#EBI-GO_prok:full list of proka GO-terms
+	with open(GO_prok) as termsprok:
 		termsproklist=[]
 		for term in termsprok:
 			termsproklist.append(term)
-	###
 
 	# Every information contained between <REGION> markups potentially contains a TRANSCRIPT ID,so:
 	#For every <REGION> fields of this XML,search a TRANSCRIPT ID and if TRANSCRIPT ID FIND, do GO-retrieving from protlist (uniprot ids list variable)
@@ -431,10 +440,9 @@ def UNIPROTtoGO(path,output,protlist,dicoGO,GOFile,goprokFile): #Uniprot to GO i
 				nb3+=1
 				sys.stdout.write("\r{0} <TRANSCRIPT> fields processed".format(nb3))
 				#/counter		
+				i+=1 
 
-				i+=1 ## i+1--> increment next region field counter
-
-	#After all XML building, write the new XML in output file
+	#After all XML ebuilding, write the new XML in output file
 	print "\nWriting new XML"		
 	#REMARQUE: l'écriture du nouveau XML requiert en RAM beaucoup plus que sa taille finale
 	outputFile.write(etree.tostring(root,pretty_print=True))
@@ -459,12 +467,15 @@ def main():
 	if len(sys.argv)==1:
 		parser.print_help()
 		sys.exit(1)
-	##################  Manage Arguments  ##########################
+	
 
-	#Parse arguments
+	########### Manage workflow accorded to Args  ##################
 	Arguments=parser.parse_args()
 
-	nplist=extractNP(Arguments.input)
+	#################### Create GO-slim file #######################
+	os.system("GOslimmer_xml -i " + Arguments.obo + " -o GO_prok.txt")
+
+	nplist=extractNP(Arguments.input, Arguments.withHomoplasy)
 
 	#if NP correspondence file already exists manage it, else write it
 	if Arguments.NPdatabases :
@@ -473,8 +484,8 @@ def main():
 	
 	else :
 		dicoNP = {}
-		Arguments.NPdatabases = "NP-EBI_table.tsv"
-		f = open("NP-EBI_table.tsv",'w')
+		Arguments.NPdatabases = "NP-EBI_databases.tsv"
+		f = open("NP-EBI_databases.tsv",'w')
 		dicoNP=readDBFile(Arguments.NPdatabases)
 		f.close()
 		#and start id mapping with the correct arguments
@@ -484,16 +495,16 @@ def main():
 	if Arguments.GOdatabases :
 		dicoGO = readDBGOFile(Arguments.GOdatabases)
 		#and start GO retrieving with the correct arguments
-		UNIPROTtoGO(Arguments.input,Arguments.output,protlist,dicoGO,Arguments.GOdatabases,Arguments.goprok)
+		UNIPROTtoGO(Arguments.input,Arguments.output,protlist,dicoGO,Arguments.GOdatabases, "GO_prok.txt")
 	
 	else :
 		dicoGO = {}
-		Arguments.GOdatabases = "EBI-GO_table.tsv"
-		f = open("EBI-GO_table.tsv",'w')
+		Arguments.GOdatabases = "EBI-GO_databases.tsv"
+		f = open("EBI-GO_databases.tsv",'w')
 		dicoGO = readDBGOFile(Arguments.GOdatabases)
 		f.close()	
 		#and start GO retrieving with the correct arguments
-		UNIPROTtoGO(Arguments.input,Arguments.output,protlist,dicoGO,Arguments.GOdatabases)
+		UNIPROTtoGO(Arguments.input,Arguments.output,protlist,dicoGO,Arguments.GOdatabases, "GO_prok.txt")
 
 	#Show counter results
 	print "\n====================================================================\nSCRIPT FINISHED IN ",int((time.time()-t1)),"SECONDS"
