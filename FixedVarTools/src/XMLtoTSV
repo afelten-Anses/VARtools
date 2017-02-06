@@ -1,0 +1,169 @@
+#!/usr/bin/python
+# -*- coding: iso-8859-1 -*-
+import argparse
+import os, sys, time
+from itertools import chain
+from lxml import etree
+import xml.etree.ElementTree as ET
+
+__doc__="""
+Extract informations of a given node from XML and write its in a TSV file.
+
+Inputs are :
+	- a XML file obtained with phyloFixedVar or FixedVar
+	- the id of the node of interest
+	- a prefix for the TSV output file  
+
+Outputs are :
+	- TSV file with extracted informations
+
+@version: 1.0
+@author: Arnaud Felten
+@organization : ANSES
+"""
+
+def get_parser():
+	"""
+	Parse arguments
+	@return: arguments list
+	@rtype: parser object
+	"""
+
+	parser = argparse.ArgumentParser(description='Extract informations of a given node from XML \
+		and write its in a TSV file')
+
+	parser.add_argument('-i', action="store", dest='XLM', 
+						type=str, required=True, help='XLM obtained with phyloFixedVar or FixedVar')
+
+	parser.add_argument('-n', action="store", dest='NODE', 
+						type=int, required=True, help='id of the node of interest')
+
+	parser.add_argument('-o', action="store", dest='OUTPUT', 
+						type=str, default='output', help='output Prefix for the TSV file(default:output)')
+
+	return parser
+
+
+def node_to_tsv(node, output):
+	"""
+	Write all node informations in a TSV file
+	@param node : node of interest to process
+	@type node : etree
+	@param output : name of the output TSV file
+	@type output : string
+	"""	
+
+	outfile = open(output, 'w')
+
+	# stock the two comparison for this node
+	comparisons = node.findall('COMPARISON')
+
+	for comparison in comparisons :
+		comparisonNumber = comparison.attrib['value']
+		outfile.write("comparison " + comparisonNumber + '\n')
+		outfile.write("genome(s) to analyse : ")
+
+		# revocer the list of genomes to compare
+		genomes = comparison.findall('GENOMES_TO_ANALYSE/GENOME')
+		flag = True
+		for genome in genomes :
+			if flag == False :
+				outfile.write(", " + genome.text)			
+			else :
+				flag = False
+				outfile.write(genome.text)
+		outfile.write("\n")		
+
+		# write header of the tab
+		outfile.write("POSITION\tVARTYPE\tNUCL\tHOMOPLASY\tREGION\tANNOTATION\n")
+
+		variants = comparison.findall('VARIANTS/VARIANT')
+		for variant in variants :
+			position = variant.find("POSITION").text
+			vartype = variant.find("TYPE").text
+			nucl = variant.find("NUCL").text
+			homplasy = variant.find("HOMOPLASY").text
+			region = variant.find("REGION").attrib['value']
+
+			outfile.write(position + '\t' + vartype + '\t' + nucl + '\t' + homplasy + '\t' + \
+				region + '\t')
+
+
+			if region == "intragenic" :
+				# print the gene informations
+
+				geneID = variant.find("REGION/GENE_ID").text
+				geneName = variant.find("REGION/GENE_NAME").text
+				transcrit = variant.find("REGION/TRANSCRIT").text
+				impact = variant.find("REGION/IMPACT").text
+
+				annotation = geneID + '|' + geneName + '|' + transcrit + '|' + impact + '|'
+
+				GOs = variant.findall('REGION/GOLIST/GO')
+				# check if go informations are present and write its	
+				if len(GOs) > 0 :
+					annotationGO = []
+					for GO in GOs :
+						goID = GO.find("ID").text
+						domain = GO.find("DOMAIN").text
+						description = GO.find("DESCRIPTION").text
+						annotationGO.append(goID + ',' + domain + ',' + description)
+					annotation = annotation + ';'.join(annotationGO)	
+
+				outfile.write(annotation)	
+
+
+			outfile.write('\n')	
+
+
+		outfile.write("\n\n")
+
+
+	outfile.close()
+
+
+#main function	
+def main():
+
+
+	##################
+	# gets arguments #
+	##################
+
+	parser=get_parser()
+
+	#print parser.help if no arguments
+	if len(sys.argv)==1:
+		parser.print_help()
+		sys.exit(1)
+
+	Arguments=parser.parse_args()
+
+
+	##################
+	# parse the XML  #
+	##################
+
+	tree = ET.parse(Arguments.XLM)
+	root = tree.getroot()
+
+	nodes = root.findall('NODE')
+	flag = False
+
+	# find the interest node in the XML tree
+	for node in nodes :
+		if int(node.attrib['value']) == Arguments.NODE :
+			flag = True
+			# extract informations in the TSV
+			node_to_tsv(node,Arguments.OUTPUT+'.tsv')
+			break
+			
+	# Report error if no node with the given id is found		
+	if flag == False :
+		print "ERROR : node not found !"
+		sys.exit()	
+
+
+
+if __name__ == "__main__":
+	main()				

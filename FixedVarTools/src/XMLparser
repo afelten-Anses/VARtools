@@ -1,0 +1,171 @@
+#!/usr/bin/python
+# -*- coding: iso-8859-1 -*-
+import argparse
+import os, sys, time
+
+
+__doc__="""
+Parse the phyloFixedVar or FixedVar XML output.
+
+Inputs are :
+	- a XML file obtained with phyloFixedVar or FixedVar
+	- the id of the node of interest
+	- a prefix for the TSV output file  
+
+Outputs are :
+	- XML parsed file
+
+@version: 1.0
+@author: Arnaud Felten
+@organization : ANSES
+"""
+
+def get_parser():
+	"""
+	Parse arguments
+	@return: arguments list
+	@rtype: parser object
+	"""
+
+	parser = argparse.ArgumentParser(description='Parse the phyloFixedVar or FixedVar XML output')
+
+	parser.add_argument('-i', action="store", dest='XML', 
+						type=str, required=True, help='XML obtained with phyloFixedVar or FixedVar')
+
+	parser.add_argument('-c', action="store", dest='comparisonNb', 
+						type=int, default=0, help='comparison id to extract (default:all)')
+
+	parser.add_argument('-n', action="store", dest='nodeNb', 
+						type=int, default=0, help='Node id to extract (default:all). If a combination node is given, this option don\'t work.')
+
+	parser.add_argument('-o', action="store", dest='OUTPUT', 
+						type=str, default='output', help='output Prefix for the TSV file(default:output)')
+
+	parser.add_argument('--SNP', dest='SNP', action='store_true', \
+		help='No INDEL, only SNP in output (default:False)', default=False)
+
+	parser.add_argument('--INDEL', dest='INDEL', action='store_true', \
+		help='No SNP, only INDEL in output (default:False)', default=False)
+
+	parser.add_argument('--homoplastic', dest='homoplastic', action='store_true', \
+		help='Only homoplastic variants in output (default:False)', default=False)
+
+	parser.add_argument('--non_homoplastic', dest='non_homoplastic', action='store_true', \
+		help='Only non-homoplastic variants in output (default:False)', default=False)
+
+	parser.add_argument('--synonymous', dest='synonymous', action='store_true', \
+		help='Only synonymous variants in output (default:False)', default=False)
+
+	parser.add_argument('--non_synonymous', dest='non_synonymous', action='store_true', \
+		help='Only non-synonymous variants in output (default:False)', default=False)
+
+	return parser
+
+
+
+#main function	
+def main():
+
+
+	##################
+	# gets arguments #
+	##################
+
+	parser=get_parser()
+	
+	#print parser.help if no arguments
+	if len(sys.argv)==1:
+		parser.print_help()
+		sys.exit(1)
+	
+	Arguments=parser.parse_args()
+
+
+	######################
+	# arguments checking #
+	######################
+
+	if (Arguments.SNP and Arguments.INDEL) or \
+	(Arguments.homoplastic and Arguments.non_homoplastic) or \
+	(Arguments.synonymous and Arguments.non_synonymous):
+
+		print "ERROR : incompatible arguments"
+		sys.exit(1)
+
+
+	##################
+	# parse the XML  #
+	##################
+
+	XML = open(Arguments.XML,'r')
+	lines = XML.readlines()
+	XML.close()
+
+	outputXML = open(Arguments.OUTPUT,'w')
+
+	for line in lines :
+
+		if("root>" in line):
+			outputXML.write(line)
+
+		elif("<NODE" in line):
+			if(Arguments.nodeNb!=0 and Arguments.nodeNb!=int(line.split("\"")[1])):
+				writeNode = False
+			else:
+				writeNode = True	
+				outputXML.write(line)
+
+		elif(writeNode and "<COMPARISON" in line):
+			if(Arguments.comparisonNb!=0 and Arguments.comparisonNb!=line.split("\"")[1]):
+				writeComparison = False
+			else:
+				writeComparison = True	
+				outputXML.write(line)
+
+		elif(writeNode and writeComparison)	:
+			if(("<GENOME" in line) or ("</GENOMES" in line) or ("VARIANTS>" in line) or \
+				("</COMPARISON>" in line) or ("</NODE>" in line)):
+				outputXML.write(line)
+
+			else:
+
+				if "<VARIANT>" in line :
+					listVAR = []
+					listVAR.append(line)
+					keepVAR = True
+
+				elif("</VARIANT>" not in line):
+					listVAR.append(line)
+
+					if "<TYPE>" in line :
+
+
+						if (Arguments.SNP) and ("INDEL" in line):
+							keepVAR = False
+							
+						elif (Arguments.INDEL) and ("SNP" in line):
+							keepVAR = False	
+
+					if "<HOMOPLASY>" in line :		
+						if (Arguments.homoplastic) and ("No" in line):
+							keepVAR = False
+						elif (Arguments.non_homoplastic) and ("Yes" in line):
+							keepVAR = False	
+					if "<IMPACT>" in line :
+						if (Arguments.non_synonymous) and ("synonymous_variant" in line):
+							keepVAR = False
+						elif (Arguments.synonymous) and ("synonymous_variant" not in line):
+							keepVAR = False					
+
+				else:
+					if keepVAR :
+						outputXML.write(''.join(listVAR))	
+						outputXML.write(line)
+
+
+	outputXML.close()					
+
+
+
+if __name__ == "__main__":
+	main()		

@@ -1,0 +1,942 @@
+#!/usr/bin/python
+# -*- coding: iso-8859-1 -*-
+import argparse
+import os, sys, time
+from itertools import chain
+from lxml import etree
+
+__doc__="""
+Extract all fixed variants of phylogeny nodes from a VCF annotated file. 
+
+For each node from a phylogeny, 2 combination are make (one branch again the other and inversely). 
+The script extract variants present in a branch and not existing in the other branch (cousins). Homoplasy is possible at this step.
+The script also find variants present in a branch but nowhere else (without homoplasy). 
+
+Inputs are :
+	- a VCF file previously annotated by SnpEff
+	- a newick file obtained from the VCF without nodes label
+	- a prefix for outputs files 
+
+Outputs are :
+	- a XML file with all fixed variants and its annotations for each node and each combination. 
+	- a newick file similar to the input newick file with the node label (node id and combinations id).
+
+@warning: /!\ The newick tree must be binary.
+@version: 1.0
+@author: Arnaud Felten
+@organization : ANSES
+"""
+
+
+def get_parser():
+	"""
+	Parse arguments
+	@return: arguments list
+	@rtype: parser object
+	"""
+
+	parser = argparse.ArgumentParser(description='Extract all fixed variants of phylogeny \
+		nodes from a VCF annotated file')
+
+	parser.add_argument('-t', action="store", dest='TREE', 
+						type=str, required=True, help='NEWICK file without node label (REQUIRED)')
+	
+	parser.add_argument('-i', action="store", dest='VCF', 
+						type=str, required=True, help='VCF file annotated with SnpEff (REQUIRED)')
+
+	parser.add_argument('-o', action="store", dest='OUTPUT', 
+						type=str, default='output', help='output prefix (default:output)')
+
+	return parser
+
+
+class var(object) :
+	"""
+	Create var object to stock variant information
+	@param type : type of mutation ('SNP' or 'INDEL') 
+	@type type : string
+	@param pos : variant position regarding the reference genome 
+	@type pos : integer
+	@param var : nucleic variation 
+	@type var : string
+	@param homoplasy : homoplasic variant ('Yes' or 'No') 
+	@type homoplasy : string
+	@param region : type of genetic region ('intergenic' or 'intragenic')
+	@type region : string
+	@param impact : variant impact
+	@type impact : string
+	@param geneID : for a intragenic region, the gene ID impacted by the variant
+	@type geneID : string
+	@@param geneName : for a intragenic region, the gene name impacted by the variant
+	@type geneName : string
+	@param transcritID : for a intragenic region, the transcrit ID impacted by the variant
+	@type transcritID : string	
+	"""
+
+	def __init__(self):
+		"""
+		Initialize the var class
+		"""
+		self.type = ""
+		self.pos = 0
+		self.var = "N"
+		self.homoplasy = ""
+		self.region = ""
+		self.impact = ""
+		self.geneID = ""
+		self.geneName = ""
+		self.transcritID = ""
+
+	def setType(self, type):
+		"""
+		Set the type of mutation ('SNP' or 'INDEL')
+		@param type : type of mutation ('SNP' or 'INDEL') 
+		@type type : string
+		"""
+		self.type = type
+
+	def setPos(self, pos):
+		"""
+		Set the variant position regarding the reference genome 
+		@param pos : variant position regarding the reference genome 
+		@type pos : integer
+		"""
+		self.pos = pos		
+
+	def setVar(self, var):
+		"""
+		Set the nucleic variation
+		@param var : nucleic variation 
+		@type var : string
+		"""
+		self.var = var	
+
+	def setHomoplasy(self, homo):
+		"""
+		Set if the variant is homoplasic or not ('Yes' or 'No')
+		@param homo : homoplasic variant ('Yes' or 'No') 
+		@type homo : string
+		"""
+		self.homoplasy = homo	
+
+	def setRegion(self, reg):
+		"""
+		Set the type of genetic region ('intergenic' or 'intragenic')
+		@param reg : type of genetic region ('intergenic' or 'intragenic')
+		@type reg : string
+		"""
+		self.region = reg
+
+	def setImpact(self, imp):
+		"""
+		Set the genetic impact of the variant
+		@param imp : variant impact
+		@type imp : string
+		"""
+		self.impact = imp	
+
+	def setGeneID(self, id):
+		"""
+		Set the gene ID impacted by the variant
+		@param id : gene ID impacted by the variant
+		@type id : string
+		"""
+		self.geneID = id		
+
+	def setGeneName(self, name):
+		"""
+		Set the gene name impacted by the variant
+		@param name : gene name impacted by the variant
+		@type name : string
+		"""
+		self.geneName = name		
+
+	def setTranscritID(self, transcritID):
+		"""
+		Set the transcrit ID impacted by the variant
+		@param transcritID :  transcrit ID impacted by the variant
+		@type transcritID : string
+		"""
+		self.transcritID = transcritID		
+
+
+class genome(object) :
+	"""
+	Create genome object to stock all of its variants informations
+	@param name : name of the genome
+	@type name : string
+	@param variants : list of var objects assigned to the genome 
+	@type variants : list
+	"""
+	def __init__(self):
+		"""
+		Initialize the genome class
+		"""
+		self.name = ""
+		self.variants = []
+
+	def setName(self, name):
+		"""
+		Set the name of the genome
+		@param name : name of the genome
+		@type name : string
+		"""
+		self.name = name.split('/')[-1] #if path, only select sample name
+
+	def setVar(self, variants):
+		"""
+		Set a list of var objects assigned to the genome
+		@param variants : list of var objects assigned to the genome 
+		@type variants : list
+		"""
+		self.variants = variants
+
+	def addVariant(self, variant):
+		"""
+		Add a new var object in the genome variants list
+		@param variants : list of var objects assigned to the genome 
+		@type variants : list
+		"""
+		self.variants.append(variant)	
+
+
+class node(object) :
+	"""
+	Create node object to stock the phylogeny tree
+	@param name : name of the genome
+	@type name : string
+	@param variants : list of var objects assigned to the genome 
+	@type variants : list
+	"""
+	
+	def __init__(self):
+		"""
+		Initialize the node class
+		@param fils : list of sons nodes objects
+		@type fils : list
+		@param pere : father node object 
+		@type pere : node object
+		@param val : genome name if the node is a leaf
+		@type val : string
+		"""
+		self.fils = []
+		self.pere = None
+		self.val = None
+
+	def nbFils(self):
+		"""
+		Compute number of sons
+		@return: number of sons
+		@rtype: integer
+		"""
+		return len(self.fils)
+
+	def isLeaf(self):
+		"""
+		Check if the node is a leaf
+		@return: True if the node is a leaf, False otherwise
+		@rtype: boolean
+		"""
+		if len(self.fils)==0:
+			return True
+		else:
+			return False	
+
+	def setPere(self, node):
+		"""
+		Set the father node of the current node object
+		@param node : father node object 
+		@type node : node object
+		"""
+		self.pere = node
+
+	def setFils(self, node):
+		"""
+		Add a new son to the current node object
+		@param node : son node object 
+		@type node : node object
+		"""
+		self.fils.append(node)
+
+	def setVal(self, val):
+		"""
+		Set the genome name of the node
+		@param val : genome name
+		@type val : string
+		"""
+		self.val = val	
+				
+	def listLeaf(self, liste):
+		"""
+		Give all genomes name of all sons node objects (recursive function)
+		@param liste : empty list which will contain genomes name
+		@type liste : list
+		"""
+		for node in self.fils :
+			if node.isLeaf() :
+				liste.append(node.val)
+			else :
+				node.listLeaf(liste)		
+
+
+def printObjNucl(objetNucl):
+	"""
+	Debug fonction, print all attributes of var object
+	@param objetNucl : object var to print
+	@type objetNucl : var object
+	"""
+
+	print "Type : " + objetNucl.type
+	print "Position : " + str(objetNucl.pos)
+	print "Variant : " + objetNucl.var
+	print "Region : " + objetNucl.region
+	if objetNucl.region == "intragenic" :
+		print "Impact : " + objetNucl.impact
+		print "Gene id : " + objetNucl.geneID
+		print "Gene name : " + objetNucl.geneName
+		print "Transcrit id : " + objetNucl.transcritID
+
+
+def createNode():
+	"""
+	Create a new empty node object
+	@return: empty node object
+	@rtype: node object
+	"""
+	root = node()
+	return root
+
+
+def readTree(file):
+	"""
+	Read a newick file and stock informations in a node object
+	@param file : newick file name
+	@type file : string
+	@return: root of the phylogeny tree
+	@rtype: node object
+	"""
+
+	with open(file, 'rb') as newickFile:
+
+		line = newickFile.readlines()[0]
+		firstNode = True
+		leafVal = ""
+
+		for character in line :
+
+			if character == '(': 
+			# start a new node
+				if firstNode :
+					# if it's the first node, create the root
+					root = createNode() 
+					node_actuel = root
+					firstNode = False
+					isLeaf = True
+
+				else :
+					new_node = createNode()	
+					
+					# make the relationship between son and father
+					new_node.setPere(node_actuel) 
+					node_actuel.setFils(new_node)
+
+					node_actuel = new_node
+					isLeaf = True
+
+			elif isLeaf and character != ':':
+				# start of a genome name
+				leafVal = leafVal + character
+
+			elif character == ':' and len(leafVal)>0:
+				# end of a branch, start of a genome name --> set it as a node value
+				isLeaf = False
+				leaf = createNode()
+				leaf.setVal(leafVal)
+
+				# make the relationship between son and father
+				leaf.setPere(node_actuel)
+				node_actuel.setFils(leaf)
+				
+				leafVal = ""
+
+			elif character == ',':
+				isLeaf = True	
+
+			elif character == ')':
+				# end of node, back to parent node
+				node_actuel = node_actuel.pere						
+
+
+		return root
+
+
+def allNodesLeafs(node, liste):
+	"""
+	For a given node, stock all its descendants name in a list (recursive function)
+	@param node : node object which descendants names will be found
+	@type node : node object 
+	@param liste : empty liste that will contain genomes name
+	@type liste : list
+	"""
+
+	if node.isLeaf() :
+		liste.append(node.val)
+
+	else:	
+
+		l = []
+		node.listLeaf(l)
+		liste.append(l)
+
+		for n in node.fils :
+			allNodesLeafs(n, liste)
+
+
+def groupCompare(node, dico):
+	"""
+	Complete a dictionnary which will contain a id as key and a list as value. \
+	The list is composed by 2 element : 
+		- the first element is a list of all descendants genomes name of a node object,
+		- the second element is a list of all cousin(s) genomes names. \
+	\ 	
+	This function is applied on all sons of the given node.  
+	@param node : kin node object to process
+	@type node : node object 
+	@param dico : dictionnary to complete
+	@type dico : dictionnary
+	"""
+
+	for n in node.fils :
+
+		# make a new id for all node children an a new empty list for all of them
+		nb = len(dico.keys()) +1
+		dico[nb] = [[],[]]
+		
+		# find all genomes name of the children node descendance
+		if n.isLeaf() :
+			dico[nb][0].append(n.val)
+		else :	
+			n.listLeaf(dico[nb][0])
+
+		# find all genomes name of the interest node descendance	
+		liste = []
+		node.listLeaf(liste)
+
+		# find all cousins of the 'n' node
+		l = []
+		for element in liste :
+			if element not in dico[nb][0] :
+				l.append(element)
+		dico[nb][1] = l
+			
+
+def AllgroupCompare(node, dico):
+	'''
+	Launch the groupCompare funtion on all sons of a given node
+	@param node : kin node object to process
+	@type node : node object 
+	@param dico : dictionnary to complete
+	@type dico : dictionnary
+	'''
+
+	groupCompare(node, dico)
+	for n in node.fils :
+		AllgroupCompare(n,dico)
+
+
+def addANN(objetNucl, annotation):
+	'''
+	Add annotation informations to a var object
+	@param objetNucl : var object to complete
+	@type objetNucl : var object 
+	@param annotation : for one line in a VCF file, the info column
+	@type annotation : string
+	'''
+
+	# select the annotation informations adding by SNPEff
+	for element in annotation.split(";") :
+		if "ANN=" in element :
+			annotation = element.split("|")
+			break
+
+	# if variant in a intergenic region, no additional informations		
+	if "intergenic_region" in annotation[1] :
+		objetNucl.setRegion("intergenic")
+
+	# else, add impact, gene name and id, and transcrit id informations	
+	else:
+		objetNucl.setRegion("intragenic")	
+		objetNucl.setImpact(annotation[1])
+		objetNucl.setGeneName(annotation[3])
+		objetNucl.setGeneID(annotation[4])
+		objetNucl.setTranscritID(annotation[6])
+
+
+def readVCFfile(file):
+	'''
+	Read a VCF file and make a list constituted by genome objects from genome in the VCF 
+	@param file : VCF file 
+	@type file : file
+	@return: list of genome objects
+	@rtype: list
+	'''
+
+	vcf = open(file,'rb')
+	lines = vcf.readlines()
+
+	# flag variable
+	firstLine = True
+
+	listeGenome = []
+
+	# variable to check the shift 
+	pos = ""
+
+	for line in lines :
+
+		# create a liste from the line, one column is one element of the list
+		line = line.split('\t')
+
+		# don't process header lines
+		if("##" not in line[0]):
+
+			if firstLine :
+				# line with columns name
+
+				# Find genomes name
+				for g in line[9:] :
+					g = g.rstrip() 
+					Genome = genome()
+					Genome.setName(g)
+					listeGenome.append(Genome)
+
+				firstLine = False
+			
+			# tab line	
+			else :
+			
+				# avoid 2 lines with the same position (SNP & INDEL).
+				# Normally delete with the VCF filter script
+				if pos != line[1] :
+					pos = line[1]	
+
+					variant = []
+					variant.append(line[3])
+					variantModif = []	
+
+					# avoid lines with no information for alternative allele
+					# Normally delete with the VCF filter script
+					if(line[4] != '.'):
+
+						# make a list with one alternative allele per element
+						variantModif.append(line[4].split(','))
+						variantModif = list(chain.from_iterable(variantModif))
+						variant = variant + variantModif	
+
+						if "VARTYPE=SNP" in line[7]:
+							vartype = "SNP"
+						else :
+							vartype = "INDEL"
+
+						# avoid lines with no information for at least one genome
+						# Normally delete with the VCF filter script
+						flag = True
+						for g in line[9:] :
+							vari = g.split(':')[0]
+							if('.' in vari):
+								flag = False
+								break
+						if flag :		
+
+							# make a new var object and associate it with genome object
+							i = 0	
+							for g in line[9:] :
+								vari = g.split(':')[0]
+								if('.' not in vari):
+									vari = int(vari) # match to the correct reference or alternative allele 
+									newVariant = var()
+									newVariant.setType(vartype)
+									newVariant.setPos(int(line[1]))
+									newVariant.setVar(variant[vari])
+									addANN(newVariant, line[7])
+									listeGenome[i].addVariant(newVariant)
+									#printObjNucl(newVariant) # Debug
+								i+=1	
+
+	return listeGenome
+
+
+def selectPosSensible(listeGenomes):
+	'''
+	Select all position which all genome from a list have the same allele.
+	Not necessary for only one genome.
+	@param listeGenomes : list of genome objects
+	@type listeGenomes : list
+	@return: dictionnary with the position as key and the nucleic allele for value
+	@rtype: dictionnary
+	'''
+
+	dicoVariants = {} # dictionnary of all alleles of genomes
+	dicoPosSensible = {} # only commun allele
+
+	# create a dictionnary of all alleles of genomes with position as key and
+	# the list of allele for each genome as value
+	for Genome in listeGenomes :
+
+		for variant in Genome.variants :
+
+			if variant.pos in dicoVariants :
+				dicoVariants[variant.pos].append(variant.var)
+			else :
+				dicoVariants[variant.pos] = []
+				dicoVariants[variant.pos].append(variant.var)
+
+	# select commun alleles			
+	for pos in dicoVariants :
+		# check if all genomes have a allele for this position
+		if len(dicoVariants[pos]) == len(listeGenomes) :
+			n = dicoVariants[pos][0]
+			flag = True
+			# check if all alleles are the same
+			for var in dicoVariants[pos][1:]:
+				if var != n :
+					flag = False
+					break
+			if flag :
+				dicoPosSensible[pos] = n		
+
+	return dicoPosSensible
+	
+
+def genomeName_to_genomeObjet(GenomesNames, GenomesObjet):
+	'''
+	From a list of genomes name, this fuction find the genome objects associated to its name.
+	@param GenomesNames : list of genome names
+	@type GenomesNames : list
+	@param GenomesObjet : list of genome objects
+	@type GenomesObjet : list
+	@return: list of genome objects associated to the genome names of the GenomesNames list
+	@rtype: list
+	'''
+
+	listeObjets = []
+		
+	for GenomeName in GenomesNames :
+		for GenomeObjet in GenomesObjet :
+			if GenomeName == GenomeObjet.name :
+				listeObjets.append(GenomeObjet)
+				break
+
+	return listeObjets			
+
+
+def createDicoPos(listeGenomesObjets):
+	'''
+	Make a dictionnary with all variants position and the all the different alleles associated
+	@param listeGenomesObjets : list of genome objects
+	@type listeGenomesObjets : list
+	@return: dictionnary with position as key and the list of the different alleles at this position for value
+	@rtype: dictionnary
+	'''	
+
+	dicoPos = {}
+
+	for objet in listeGenomesObjets :
+		for variant in objet.variants :
+
+			# if the position don't existe in dictionnary, make a new entry
+			if(variant.pos not in dicoPos):
+				dicoPos[variant.pos] = []
+				dicoPos[variant.pos].append(variant.var)	
+
+			# else check if the allele already exists, add it if not	
+			else :
+				flag = True
+				for element in dicoPos[variant.pos] :
+					if element == variant.var :
+						flag = False
+						break
+				if flag :
+					dicoPos[variant.pos].append(variant.var)		
+
+	return dicoPos		
+
+
+def selectPosSpecifique(dicoPosSensible, listeGenomesObjets):
+	'''
+	Select the alleles existing in the dictionnary and not present for the genomes of the list (specificity filter)
+	@param dicoPosSensible : dictionnary with positions as key and the allele corresponding as value
+	@type dicoPosSensible : dictionnary
+	@param listeGenomesObjets : list of genome objects
+	@type listeGenomesObjets : list
+	@return: dictionnary with position specifique as key and the allele corresponding as value
+	@rtype: dictionnary
+	'''	
+	
+	# make a dictionnary of all variants of all genomes from the list				
+	dicoPosGenomes = createDicoPos(listeGenomesObjets)
+
+	dicoSpecifique = {}
+	
+	for pos in dicoPosSensible :
+		# check if the position exist in the both dictionnary
+		if pos in dicoPosGenomes :
+			var_to_compare = dicoPosGenomes[pos]
+			# check if the allele isn't present in the dicoPosGenomes dictionnary
+			if ''.join(dicoPosSensible[pos]) not in dicoPosGenomes[pos] : 
+				dicoSpecifique[pos] = dicoPosSensible[pos]
+
+	return 	dicoSpecifique	
+
+
+def allOtherGenomes(Genomes_to_exclude, allGenomesObjets):
+	'''
+	Make a liste of genome name from a list of genome objects without the genomes name given in argument
+	@param Genomes_to_exclude : list of genomes name to exclude
+	@type Genomes_to_exclude : list
+	@param allGenomesObjets : list of genome objects
+	@type allGenomesObjets : list
+	@return: a list of genomes name without the given name
+	@rtype: list
+	'''
+
+	allGenomesNames = []
+
+	# make a genomes name list from a genome objects list
+	for objet in allGenomesObjets :
+		allGenomesNames.append(objet.name)
+
+	shortList = []
+	# add the genome name if it isn't in the list to exclude
+	for element in allGenomesNames :
+		if element not in Genomes_to_exclude :
+			shortList.append(element)	
+
+	return shortList
+
+
+def addNodeNameNewick(filename, outputFilename):
+	'''
+	Make a new newick fill with a label for each node. The label is created like this :
+		- N + the number of the node
+		- [CX-CY] with X and Y the number of combination
+	@param filename : newick input file name
+	@type filename : string
+	@param outputFilename : newick output file name
+	@type outputFilename : string
+	'''
+
+	inNewick = open(filename, 'r')
+	outNewick = open(outputFilename, 'w')
+
+	lines = inNewick.readlines()
+
+	listNodeName = []
+	maxNode = 0
+	listCombinName = []
+	maxCombin = 0
+
+	for line in lines :
+		for character in line :
+			outNewick.write(character)
+			# new node
+			if character == '(' :
+				# two combination per node so two incrementing ids 
+				listCombinName.append(maxCombin+1)
+				listCombinName.append(maxCombin+2)
+				maxCombin += 2
+				# increment the node id and the number of node
+				listNodeName.append(maxNode+1)
+				maxNode += 1
+
+			elif character == ')' :
+				# end of the node, write the label of this node
+				node = "N" + str(listNodeName[-1]) + "[C" + str(listCombinName[-2]) + '-C' + \
+				str(listCombinName[-1]) + "]"
+				outNewick.write(node)
+				# remove the node id and combinations ids to their list
+				listCombinName = listCombinName[0:-2]
+				listNodeName = listNodeName[0:-1]
+
+	outNewick.close()
+
+
+def makeXML(dico, GenomesObjet):
+	'''
+	Make a XML objet from a the comparaison groups list 
+	@param dico : dictionnary obtained with the AllgroupCompare function
+	@type dico : string
+	@param GenomesObjet : list of genome objects
+	@type GenomesObjet : list
+	@return: root of the XML tree
+	@rtype: etree
+	'''
+
+	root = etree.Element("root")
+	numNode = 1
+	flag = True
+
+	# for each combination
+	for element in dico :
+
+		# make a 'NODE' entry for all 2 combination
+		if flag :
+			node = etree.SubElement(root, "NODE")
+			node.set("value", str(numNode))
+			flag = False
+
+		else :
+			flag = True
+			numNode += 1	
+
+		# combination number	
+		comparaison = etree.SubElement(node, "COMPARISON")	
+		comparaison.set("value", str(element))
+
+		genome_to_process = dico[element][0]
+
+		# new entry with all genomes name to analyse
+		genomesToAnalyse = etree.SubElement(comparaison, "GENOMES_TO_ANALYSE")
+		for genome in genome_to_process :
+			g = etree.SubElement(genomesToAnalyse, "GENOME")
+			g.text = genome	
+
+		# new entry with all genomes name to compare	
+		genome_to_compare = dico[element][1]
+		genomesCousins = etree.SubElement(comparaison, "GENOMES_COUSINS")
+		for genome in genome_to_compare :
+			g = etree.SubElement(genomesCousins, "GENOME")
+			g.text = genome	
+
+		# recovers the specific and sensitive position dictionnary compared to cousins genome
+		listeObjets = genomeName_to_genomeObjet(genome_to_process, GenomesObjet)
+		if(len(genome_to_process) > 1) :
+			dicoPosSensible = selectPosSensible(listeObjets)
+		else :
+			dicoPosSensible = createDicoPos(listeObjets)	
+
+		listeObjets_to_compare = genomeName_to_genomeObjet(genome_to_compare, GenomesObjet)	
+
+		dicoSpecifique = selectPosSpecifique(dicoPosSensible, listeObjets_to_compare)
+
+		
+		# make a dictionnary without homoplasy
+		genome_to_compare = allOtherGenomes(genome_to_process, GenomesObjet)
+
+		listeObjets_to_compare = genomeName_to_genomeObjet(genome_to_compare, GenomesObjet)
+		dicoSpecifique_vsALL = selectPosSpecifique(dicoPosSensible, listeObjets_to_compare)
+
+		# recover a genome object from its genome name
+		for obj in GenomesObjet :
+			if obj.name == genome_to_process[0] :
+				genomeToUse = obj
+				break
+
+
+		# add variants informations in the xml
+		listeVariants = etree.SubElement(comparaison, "VARIANTS")
+
+		for pos in dicoSpecifique :
+
+			for variant in genomeToUse.variants:
+
+				if str(variant.pos) == str(pos) :
+
+					listeVariant = etree.SubElement(listeVariants, "VARIANT")
+
+					variantType = etree.SubElement(listeVariant, "TYPE")
+					variantType.text = variant.type
+
+					variantPos = etree.SubElement(listeVariant, "POSITION")
+					variantPos.text = str(variant.pos)
+
+					variantNucl = etree.SubElement(listeVariant, "NUCL")
+					variantNucl.text = variant.var
+
+					variantHomo = etree.SubElement(listeVariant, "HOMOPLASY")
+					if pos in dicoSpecifique_vsALL :
+						variantHomo.text = "No"
+					else :	
+						variantHomo.text = "Yes"
+
+					variantRegion = etree.SubElement(listeVariant, "REGION")
+					variantRegion.set("value", variant.region)
+
+					if variant.region == "intragenic":
+
+						variantGeneId = etree.SubElement(variantRegion, "GENE_ID")
+						variantGeneId.text = variant.geneID
+
+						variantGeneName = etree.SubElement(variantRegion, "GENE_NAME")
+						variantGeneName.text = variant.geneName
+
+						variantTranscrit = etree.SubElement(variantRegion, "TRANSCRIT")
+						variantTranscrit.text = variant.transcritID
+
+						variantImpact = etree.SubElement(variantRegion, "IMPACT")
+						variantImpact.text = variant.impact
+
+					break
+
+	return root
+
+
+#main function	
+def main():
+
+
+	##################
+	# gets arguments #
+	##################
+
+	parser=get_parser()
+	
+	#print parser.help if no arguments
+	if len(sys.argv)==1:
+		parser.print_help()
+		sys.exit(1)
+	
+	Arguments=parser.parse_args()
+
+	###############
+	# make groups #
+	###############
+
+	# make combinations groupe from the newick file
+	print "--> make combinations groups from newick file"
+	root = readTree(Arguments.TREE)
+	dico = {}
+	AllgroupCompare(root, dico)
+
+	# make the genome objets from the VCF file
+	print "--> process VCF file"
+	GenomesObjet = readVCFfile(Arguments.VCF)
+
+	######################################
+	# add node name in a new newick file #
+	######################################
+	
+	print "--> write a new newick file with nodes label"
+	addNodeNameNewick(Arguments.TREE, Arguments.OUTPUT + "_nodeName.newick")
+	
+	#################################
+	# extract variants and make XML #
+	#################################
+
+	print "--> extract variants and make XML"
+	root = makeXML(dico, GenomesObjet)		
+
+	outputFile = open(Arguments.OUTPUT + ".xml", 'w')	
+	outputFile.write(etree.tostring(root, pretty_print=True))
+	outputFile.close()	
+
+	print "Finish"
+
+if __name__ == "__main__":
+	main()				
+
+
+
+
+
+

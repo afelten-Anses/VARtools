@@ -1,0 +1,95 @@
+\begin{theindex}
+
+  \item script-BAMmaker \textit{(script)}, \hyperpage{2--4}
+    \subitem script-BAMmaker.changePredScore \textit{(function)}, 
+		\hyperpage{3}
+    \subitem script-BAMmaker.checkPredScore \textit{(function)}, 
+		\hyperpage{3}
+    \subitem script-BAMmaker.coverage \textit{(function)}, 
+		\hyperpage{3}
+    \subitem script-BAMmaker.exec\_commands \textit{(function)}, 
+		\hyperpage{2}
+    \subitem script-BAMmaker.exist \textit{(function)}, \hyperpage{2}
+    \subitem script-BAMmaker.get\_parser \textit{(function)}, 
+		\hyperpage{2}
+    \subitem script-BAMmaker.lenGenome \textit{(function)}, 
+		\hyperpage{2}
+    \subitem script-BAMmaker.main \textit{(function)}, \hyperpage{4}
+    \subitem script-BAMmaker.nbReads \textit{(function)}, \hyperpage{3}
+  \item script-reportMaker \textit{(script)}, \hyperpage{15--16}
+    \subitem script-reportMaker.extractReadStatistics \textit{(function)}, 
+		\hyperpage{15}
+    \subitem script-reportMaker.get\_parser \textit{(function)}, 
+		\hyperpage{15}
+    \subitem script-reportMaker.main \textit{(function)}, 
+		\hyperpage{16}
+    \subitem script-reportMaker.texHeader \textit{(function)}, 
+		\hyperpage{15}
+    \subitem script-reportMaker.version \textit{(function)}, 
+		\hyperpage{16}
+    \subitem script-reportMaker.workdir \textit{(function)}, 
+		\hyperpage{15}
+    \subitem script-reportMaker.writeVarCallCommand \textit{(function)}, 
+		\hyperpage{15}
+  \item script-SNP\_INDEL\_merge \textit{(script)}, \hyperpage{5}
+    \subitem script-SNP\_INDEL\_merge.exec\_commands \textit{(function)}, 
+		\hyperpage{5}
+    \subitem script-SNP\_INDEL\_merge.get\_parser \textit{(function)}, 
+		\hyperpage{5}
+    \subitem script-SNP\_INDEL\_merge.main \textit{(function)}, 
+		\hyperpage{5}
+  \item script-VARCall \textit{(script)}, \hyperpage{6--7}
+    \subitem script-VARCall.checkFiles \textit{(function)}, 
+		\hyperpage{6}
+    \subitem script-VARCall.checkPE \textit{(function)}, \hyperpage{6}
+    \subitem script-VARCall.commandLaunched \textit{(function)}, 
+		\hyperpage{6}
+    \subitem script-VARCall.get\_parser \textit{(function)}, 
+		\hyperpage{6}
+    \subitem script-VARCall.main \textit{(function)}, \hyperpage{7}
+  \item script-VCFilter \textit{(script)}, \hyperpage{8}
+    \subitem script-VCFilter.different\_in\_list \textit{(function)}, 
+		\hyperpage{8}
+    \subitem script-VCFilter.get\_parser \textit{(function)}, 
+		\hyperpage{8}
+    \subitem script-VCFilter.main \textit{(function)}, \hyperpage{8}
+  \item script-VCFmaker\_INDEL \textit{(script)}, \hyperpage{9}
+    \subitem script-VCFmaker\_INDEL.exec\_commands \textit{(function)}, 
+		\hyperpage{9}
+    \subitem script-VCFmaker\_INDEL.get\_parser \textit{(function)}, 
+		\hyperpage{9}
+    \subitem script-VCFmaker\_INDEL.main \textit{(function)}, 
+		\hyperpage{9}
+  \item script-VCFmaker\_SNP \textit{(script)}, \hyperpage{10}
+    \subitem script-VCFmaker\_SNP.exec\_commands \textit{(function)}, 
+		\hyperpage{10}
+    \subitem script-VCFmaker\_SNP.get\_parser \textit{(function)}, 
+		\hyperpage{10}
+    \subitem script-VCFmaker\_SNP.main \textit{(function)}, 
+		\hyperpage{10}
+  \item script-VCFtoFASTA \textit{(script)}, \hyperpage{11}
+    \subitem script-VCFtoFASTA.get\_parser \textit{(function)}, 
+		\hyperpage{11}
+    \subitem script-VCFtoFASTA.main \textit{(function)}, \hyperpage{11}
+    \subitem script-VCFtoFASTA.write\_fasta \textit{(function)}, 
+		\hyperpage{11}
+  \item script-VCFtoMATRIX \textit{(script)}, \hyperpage{12}
+    \subitem script-VCFtoMATRIX.get\_parser \textit{(function)}, 
+		\hyperpage{12}
+    \subitem script-VCFtoMATRIX.main \textit{(function)}, 
+		\hyperpage{12}
+    \subitem script-VCFtoMATRIX.write\_dico \textit{(function)}, 
+		\hyperpage{12}
+  \item script-VCFtoPseudoGenome \textit{(script)}, \hyperpage{13--14}
+    \subitem script-VCFtoPseudoGenome.check\_ref \textit{(function)}, 
+		\hyperpage{13}
+    \subitem script-VCFtoPseudoGenome.fasta\_to\_dico \textit{(function)}, 
+		\hyperpage{13}
+    \subitem script-VCFtoPseudoGenome.get\_parser \textit{(function)}, 
+		\hyperpage{13}
+    \subitem script-VCFtoPseudoGenome.main \textit{(function)}, 
+		\hyperpage{13}
+    \subitem script-VCFtoPseudoGenome.write\_fasta \textit{(function)}, 
+		\hyperpage{13}
+
+\end{theindex}

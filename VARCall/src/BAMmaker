@@ -1,0 +1,595 @@
+#!/usr/bin/python
+# -*- coding: iso-8859-1 -*-
+import os, sys, time
+import argparse
+import uuid
+import subprocess 
+
+
+__doc__="""
+Make a BAM filtered and sorted from FASTQ and a reference FASTA File.
+This script was designed for the VARCall workflow.
+
+@requires: BWA
+@requires: samtools
+@requires: picard-tools
+@requires: Trimmomatic
+@requires: GATK
+"""
+
+
+def get_parser():
+	"""
+	Parse arguments
+	@return: arguments list
+	@rtype: parser object
+	"""
+
+	parser = argparse.ArgumentParser(description='Make a BAM filtered and sorted from FASTQ and a reference FASTA File')
+
+	parser.add_argument('-ref', action="store", dest='refFASTA', 
+						type=str, required=True, help='reference genome in FASTA (REQUIRED)')
+
+	parser.add_argument('-reads', action="store", dest='reads', 
+						type=str, required=True, nargs='+', help='single-end reads FASTQ file or paired-end reads FASTQ files (REQUIRED)')
+
+	parser.add_argument('-TRIMJAR', action="store", dest='TRIMJAR', 
+						type=str, default='/opt/Trimmomatic/0.33/trimmomatic-0.33.jar', help='Trimmomatic jar path') #required=True
+
+	parser.add_argument('-GATKJAR', action="store", dest='GATKJAR', 
+						type=str, default='/opt/GATK/3.4.0/GenomeAnalysisTK.jar', help='GenomeAnalysisTK jar path') #required=True
+
+	parser.add_argument('-PICARDJAR', action="store", dest='PICARDJAR', 
+						type=str, default='/opt/picard-tools/1.133/picard.jar', help='picard-tools jar path') #required=True
+
+	parser.add_argument('-o', action="store", dest='output', 
+						type=str, default='output', help='output name (default:output)')
+
+
+	parser.add_argument('-q', action="store", dest='minQuality', 
+						type=int, default='30', help='min phred score per base for trimming(default:30)')
+
+	parser.add_argument('-l', action="store", dest='minLen', 
+						type=int, default='50', help='min read length for trimming(default:50)')
+
+	parser.add_argument('-a', action="store", dest='adaptaters', 
+						type=str, default=None, help='adaptaters FASTA file (default:None)')
+
+	parser.add_argument('-c', action="store", dest='minCoverage', 
+						type=int, default='90', help='min breadth coverage in percent (default:90)')
+
+
+	parser.add_argument('-PL', action="store", dest='PL', 
+						type=str, default='UNKNOWN', help='sequencing plateform for RG line (default:UNKNOWN)')
+
+	parser.add_argument('-PU', action="store", dest='PU', 
+						type=str, default='UNKNOWN', help='sequencer ID for RG line (default:UNKNOWN)')
+
+	parser.add_argument('-LB', action="store", dest='LB', 
+						type=str, default='UNKNOWN', help='sequencing library (default:UNKNOWN)')
+
+
+	parser.add_argument('-T', action="store", dest='nbThreads', 
+						type=int, default='1', help='maximum number of threads to use (default:1)')
+
+	parser.add_argument('-m', action="store", dest='maxMemory', 
+						type=int, default='4000', help='max memory to use in Mb (default:4000)')
+
+
+	parser.add_argument('--removeDuplicates', dest='removeDuplicates', action='store_true', help='remove duplicates reads (default:False)', default=False)	
+
+	parser.add_argument('--indelRealigner', dest='indelRealigner', action='store_true', help='local realignment around indels (default:False)', default=False)	
+
+	parser.add_argument('--removeTmpFiles', dest='removeTmpFiles', action='store_true', help='remove temporary files (default:False)', default=False)
+
+
+	return parser
+
+
+def exec_commands(cmds, nbThreads):
+    """
+    Exec commands in parallel in multiple process (as much as we have CPU)
+    @param cmds: list of commands
+	@type cmds: list
+	@param nbThreads: number of threads to use
+	@type nbThreads: integer
+    """
+    if not cmds: return # empty list
+
+    def done(p):
+        return p.poll() is not None
+    def success(p):
+        return p.returncode == 0
+    def fail():
+        sys.exit(1)
+
+    max_task = nbThreads
+    processes = []
+    while True:
+        while cmds and len(processes) < max_task:
+            task = cmds.pop()
+            #print list2cmdline(task)
+            processes.append(Popen(task))
+
+        for p in processes:
+            if done(p):
+                if success(p):
+                    processes.remove(p)
+                else:
+                    fail()
+
+        if not processes and not cmds:
+            break
+        else:
+            time.sleep(0.05)	
+
+
+def exist(fname):
+	"""
+	Check the existence of a file.
+	@param fname: file name
+	@type fname: string
+	@return: 1 if the file is present, 0 otherwise
+	@rtype: integer 
+	"""
+	try:
+		f = open(fname,'r')
+		f.close()
+		return 1
+	except:
+		return 0
+
+
+def lenGenome(fname):
+	"""
+	Return the length of a sequence in a FASTA file (1 contig).
+	@param fname: FASTA file name
+	@type fname: string
+	@return: the number of nucleotide in the sequence
+	@rtype: integer 
+	"""
+
+	fasta = open(fname,'rb')
+	lines = fasta.readlines()
+	fasta.close()
+
+	nbNucl = 0
+	for line in lines:
+		if line[0]!='>':
+			nbNucl = nbNucl + len(line) - 1
+
+	return nbNucl		
+
+
+def coverage(fname, fref):
+	"""
+	Compute the depp coverage and breadth coverage from a BAM file. 
+	@param fname: BAM file name
+	@type fname: string
+	@param fref: reference sequence in FASTA format
+	@type fref: string
+	@return: breadth coverage
+	@rtype: float 
+	"""
+
+	tmpFile = str(uuid.uuid4()) + '.tmp'
+	command = ["samtools",  "depth", fname]
+	os.system(' '.join(command) + ' > ' + tmpFile)
+
+	tmp = open(tmpFile,'rb')
+	lines = tmp.readlines()
+	tmp.close()
+
+	nbLine = len(lines)
+	sumCoverage = 0
+
+	for line in lines:
+		sumCoverage = sumCoverage + int(line.split('\t')[2])
+
+	lenRef = lenGenome(fref)	
+	refCoverage = round(float(nbLine)/float(lenRef)*100.0,2)
+
+	print "Deep coverage : " + str(sumCoverage/nbLine)
+	print "Breadth coverage : " + str(refCoverage) + '%\n'
+
+	os.system('rm ' + tmpFile)	
+
+	return refCoverage
+
+
+def checkPredScore(fname):
+	"""
+	Unstable function, not used. Check the phred score format.  
+	@param fname: FASTQ file name
+	@type fname: string
+	@return: phred score format (33 or 64)
+	@rtype: int 
+	"""
+
+	tmpFile = str(uuid.uuid4()) + '.tmp'
+
+	os.system("head -n 40 " + fname + \
+	"  | awk '{if(NR%4==0) printf(\"%s\",$0);}' |  od -A n -t u1 | " + \
+	"awk 'BEGIN{min=100;max=0;}{for(i=1;i<=NF;i++) {if($i>max) max=$i; " + \
+	"if($i<min) min=$i;}}END{if(max<=74 && min<59) print \"Phred+33\"; " + \
+	"else if(max>73 && min>=64) print \"Phred+64\"; " + \
+	"else if(min>=59 && min<64 && max>73) print \"Solexa+64\"; " + \
+	"else print \"Unknown score encoding!\";}' > " + tmpFile)
+
+	print "head -n 40 " + fname + \
+	"  | awk '{if(NR%4==0) printf(\"%s\",$0);}' |  od -A n -t u1 | " + \
+	"awk 'BEGIN{min=100;max=0;}{for(i=1;i<=NF;i++) {if($i>max) max=$i; " + \
+	"if($i<min) min=$i;}}END{if(max<=74 && min<59) print \"Phred+33\"; " + \
+	"else if(max>73 && min>=64) print \"Phred+64\"; " + \
+	"else if(min>=59 && min<64 && max>73) print \"Solexa+64\"; " + \
+	"else print \"Unknown score encoding!\";}"
+
+	tmp = open(tmpFile,'rb')
+	lines = tmp.readlines()
+	tmp.close()
+	os.system('rm ' + tmpFile)	
+	for line in lines:
+		if 'Phred+33' in line :
+			print 33
+			return 33
+		else :
+			print 64
+			return 64	
+	
+
+def changePredScore(fname):
+	"""
+	Unstable function, not used. Change the phred score format.  
+	@param fname: FASTQ file name
+	@type fname: string
+	@return: FASTQ file name in phred 33
+	@rtype: string
+	""" 
+
+	out = '.'.join(fname.split('.')[0:-1]) + "_phred33.fastq"
+	os.system('seqret fastq-illumina::' + fname + ' fastq::' + out)
+	print 'seqret fastq-illumina::' + fname + ' fastq::' + out
+	return out
+
+
+def nbReads(liste):
+	"""
+	Compute the number of reads in FASTQ files.  
+	@param liste: list of FASTQ files
+	@type liste: list
+	@return: number of reads
+	@rtype: integer
+	""" 
+
+	nb = 0
+	for element in liste :
+		f = open(element,'rb')
+		lines = f.readlines()
+		nb = nb + (len(lines)/4)
+		f.close()
+
+	return nb	
+
+
+
+#main function	
+def main():
+
+	##################### gets arguments #####################
+	parser=get_parser()
+	
+	#print parser.help if no arguments
+	if len(sys.argv)==1:
+		parser.print_help()
+		sys.exit(1)
+	
+	Arguments=parser.parse_args()
+
+	##################### ckecks arguments #####################	
+
+	if(len(Arguments.reads)>2):
+		print "ERROR : more than 2 reads files!"
+		sys.exit(1)
+
+	'''	
+	if(Arguments.phred != 33 and Arguments.phred != 64):
+		print "ERROR : phred33 or phred64!"
+		sys.exit(1)	
+	'''	
+
+	##################### workflow #############################	
+
+	if Arguments.maxMemory >= 4000 :
+		Xmx = "-Xmx4g"
+	else :
+		Xmx = "-Xmx2g"	
+
+	##############################################################	
+	#-------------------- Generate bwa index --------------------#
+	##############################################################
+
+	print "\n--> Generate index...\n"
+	cmds = []
+
+	##bwa index
+	if not exist(Arguments.refFASTA + ".bwt"):
+		command = ["bwa", "index", "-a", "is", Arguments.refFASTA]
+		os.system(" ".join(command))
+	else :
+		print Arguments.refFASTA + ".bwt already exist!" 
+
+	##fasta index
+	if not exist(Arguments.refFASTA + ".fai"):
+		command = ["samtools", "faidx", Arguments.refFASTA]
+		os.system(" ".join(command))
+	else :
+		print Arguments.refFASTA + ".fai already exist!"	
+
+		
+	##sequence dictionnary
+	outDicName = Arguments.refFASTA.split(".")[0] + ".dict"
+
+	#if not exist(outDicName):
+	l=["java -Xmx4g -jar ", Arguments.PICARDJAR, "CreateSequenceDictionary", "REFERENCE=" + Arguments.refFASTA, \
+		"OUTPUT=" + outDicName]
+	l=" ".join(l)
+	os.system(l)	
+
+	#else :
+	#	print outDicName + "  already exist!"
+	
+
+
+	print "\n--> Generate index finish!\n"
+
+
+
+	#############################################################	
+	#-------------------- Phred quality check ------------------#
+	#############################################################
+	'''
+	print "--> Phred quality check...\n"
+	if(len(Arguments.reads)>1):
+		phred1 = checkPredScore(Arguments.reads[0])
+		phred2 = checkPredScore(Arguments.reads[1])
+		if phred1==64 or phred2==64 :
+			Arguments.reads[0] = changePredScore(Arguments.reads[0])	
+			Arguments.reads[1] = changePredScore(Arguments.reads[1])
+	else:
+		phred = checkPredScore(Arguments.reads[0])
+		if phred==64 :
+			Arguments.reads[0] = checkPredScore(Arguments.reads[0])
+	print "--> Phred quality check finish\n"	
+	'''
+
+
+	#############################################################	
+	#----------------------- Reads trimming --------------------#
+	#############################################################
+
+	print "--> Reads trimming...\n"
+	cmds = []
+
+	nReads = nbReads(Arguments.reads)
+	print "Number of reads before trimming : " + str(nReads)
+
+	##paired-end
+	if(len(Arguments.reads)>1):
+
+		command = ["java -Xmx4g -jar ", Arguments.TRIMJAR, "PE", "-threads", str(Arguments.nbThreads), \
+			"-phred" + '33', Arguments.reads[0], Arguments.reads[1], \
+			Arguments.output + "_forward_paired.fq.gz", Arguments.output + "_forward_unpaired.fq.gz", \
+			Arguments.output + "_reverse_paired.fq.gz", Arguments.output + "_reverse_unpaired.fq.gz"]
+
+		if Arguments.adaptaters :
+			command.append("ILLUMINACLIP:" + Arguments.adaptaters + ":2:30:15")	
+
+		command.append("TRAILING:" + str(Arguments.minQuality))
+		command.append("MINLEN:" + str(Arguments.minLen))
+
+		cmds.append(command)
+		os.system(' '.join(command))
+
+		#exec_commands(cmds, Arguments.nbThreads)
+
+	##single-end	
+	else :
+	
+		command = ["java -Xmx4g -jar ", Arguments.TRIMJAR, "SE", "-threads", str(Arguments.nbThreads), \
+			"-phred" + '33', Arguments.reads[0], Arguments.output + ".fq.gz"]
+
+		if Arguments.adaptaters :
+			command.append("ILLUMINACLIP:" + Arguments.adaptaters + ":2:30:15")	
+
+		command.append("TRAILING:" + str(Arguments.minQuality))
+		command.append("MINLEN:" + str(Arguments.minLen))
+
+		cmds.append(command)
+		os.system(' '.join(command))
+
+		#exec_commands(cmds, Arguments.nbThreads)
+
+	print "\n--> Trimming finish!\n"	
+
+
+
+	#############################################################	
+	#------------------------- Alignment -----------------------#
+	#############################################################
+
+	print "--> Reads alignment...\n"
+
+	RG_line = "\"@RG\\tID:" + Arguments.output + "\\tPL:" + Arguments.PL + "\\tPU:" + Arguments.PU + "\\tLB:Truseq\\tSM:" + \
+		Arguments.output + "\""
+
+	##paired-end	
+	if(len(Arguments.reads)>1):
+
+		command = ["bwa", "aln", Arguments.refFASTA, Arguments.output + "_forward_paired.fq.gz", \
+			"-t", str(Arguments.nbThreads), "-f", Arguments.output + "_forward_paired.sai"]
+
+		os.system(' '.join(command))
+
+		command = ["bwa", "aln", Arguments.refFASTA, Arguments.output + "_reverse_paired.fq.gz", \
+			"-t", str(Arguments.nbThreads), "-f", Arguments.output + "_reverse_paired.sai"]
+		os.system(' '.join(command))
+
+		command = ["bwa", "sampe", "-r", RG_line, "-f", Arguments.output + ".sam", \
+			Arguments.refFASTA, Arguments.output + "_forward_paired.sai", Arguments.output + "_reverse_paired.sai", \
+			Arguments.output + "_forward_paired.fq.gz", Arguments.output + "_reverse_paired.fq.gz"]
+		os.system(' '.join(command))
+
+
+	##single-end	
+	else :	
+
+		cmds.append(["bwa", "aln", Arguments.refFASTA, Arguments.output + ".fq.gz", \
+			"-t", str(Arguments.nbThreads), "-f", Arguments.output + ".sai"])
+
+		command = ["bwa", "aln", Arguments.refFASTA, Arguments.output + ".fq.gz", \
+			"-t", str(Arguments.nbThreads), "-f", Arguments.output + ".sai"]
+		os.system(' '.join(command))	
+		#exec_commands(cmds, 1)
+		cmds = []		
+
+		cmds.append(["bwa", "samse", "-r", RG_line, "-f", Arguments.output + ".sam", \
+			Arguments.refFASTA, Arguments.output + ".sai", Arguments.output + ".fq.gz"])
+
+		command = ["bwa", "samse", "-r", RG_line, "-f", Arguments.output + ".sam", \
+			Arguments.refFASTA, Arguments.output + ".sai", Arguments.output + ".fq.gz"]
+		print ' '.join(command)
+		os.system(' '.join(command))		
+		
+
+	print "\n--> Alignment finish!\n"		
+
+
+
+
+	#############################################################	
+	#------------------- BAM post-treatment --------------------#
+	#############################################################
+
+	#BAM post-treatment
+	print "--> BAM post-treatment...\n"
+
+	command = ["samtools", "view", "-b", "-S", \
+		Arguments.output + ".sam", "-o" , Arguments.output + ".bam", "-@", str(Arguments.nbThreads)]
+	os.system(' '.join(command))
+
+	memoryPerThreads = Arguments.maxMemory / Arguments.nbThreads
+
+	command = ["samtools", "sort", "-m", str(memoryPerThreads) + "M", "-@", str(Arguments.nbThreads), \
+		Arguments.output + ".bam", Arguments.output + "_sorted"]
+	os.system(' '.join(command))
+
+	command = ["samtools", "index", Arguments.output + "_sorted.bam"]
+	os.system(' '.join(command))
+
+	print "\n--> BAM post-treatment finish!\n"	
+
+	output_BAMFile = Arguments.output + "_sorted.bam"
+
+
+	#BAM stat
+	print "--> BAM statistics...\n"
+	tmpFile = str(uuid.uuid4()) + '.tmp'
+	command = ["samtools",  "flagstat", Arguments.output + "_sorted.bam" ]
+	os.system(' '.join(command) + ' > ' + tmpFile)
+	
+	tmp = open(tmpFile,'rb')
+	lines = tmp.readlines()
+	tmp.close()
+	for line in lines:
+		print line[0:-1]
+	os.system('rm ' + tmpFile)	
+
+	cov = coverage(Arguments.output + "_sorted.bam", Arguments.refFASTA)
+
+	if cov < Arguments.minCoverage :
+		print "WARNING : breadth coverage too low !!!\n"
+		
+
+
+	if(Arguments.removeDuplicates) :
+
+		#Removing duplicates 
+		print "--> Remove duplicates\n"
+
+		command = ["java -Xmx4g -jar ", Arguments.PICARDJAR, "MarkDuplicates", "INPUT=" + Arguments.output + "_sorted.bam", \
+			"OUTPUT=" + Arguments.output + "_removedup.bam", "VALIDATION_STRINGENCY=LENIENT", \
+			"METRICS_FILE=" + Arguments.output + "_removedup_metrics.txt", "REMOVE_DUPLICATES=true"]
+		os.system(' '.join(command))
+		
+		command = ["java -Xmx4g -jar ", Arguments.PICARDJAR,"BuildBamIndex", "VALIDATION_STRINGENCY=LENIENT", "INPUT=" + Arguments.output + "_removedup.bam"]
+		os.system(' '.join(command))
+
+		output_BAMFile = Arguments.output + "_removedup.bam"
+
+		print "\n--> Remove duplicates finish!\n"	
+
+
+	if(Arguments.indelRealigner) :	
+
+		#Local realignment around indels
+		print "--> Local realignment around indels\n"
+
+		cmds = []
+		
+		cmds.append(["java -Xmx4g -jar ", Arguments.GATKJAR, "-T RealignerTargetCreator", "-R", Arguments.refFASTA, \
+			"-I", output_BAMFile, "-o", Arguments.output + "_forIndelRealigner.intervals"\
+			, "-nt ", str(Arguments.nbThreads)\
+			])
+		cmdSyst = " ".join(cmds[0])
+		print cmdSyst
+		os.system(cmdSyst)
+
+		cmds = []
+
+		if("removedup" in output_BAMFile):
+			modified_output = output_BAMFile.split(".")[0] + "_realigned.bam"
+		else :	
+			modified_output = output_BAMFile.split("_")[0] + "_realigned.bam"
+
+		cmds.append(["java -Xmx4g -jar ", Arguments.GATKJAR, "-T IndelRealigner", "-R", Arguments.refFASTA, \
+			"-I", output_BAMFile, "-targetIntervals", Arguments.output + "_forIndelRealigner.intervals", \
+			"-o", modified_output])
+		cmdSyst = " ".join(cmds[0])
+		print cmdSyst
+		os.system(cmdSyst)
+
+		print "\n--> Local realignment around indels finish!\n"	
+
+
+	if(Arguments.removeTmpFiles) :	
+		#Remove duplicates files
+		print "--> Remove duplicates files\n"
+
+		cmds = []
+		cmds.append(["rm", Arguments.output + "_forward_paired.sai", \
+			Arguments.output + "_reverse_paired.sai", \
+			Arguments.output + "_reverse_paired.fq.gz", \
+			Arguments.output + "_reverse_unpaired.fq.gz", \
+			Arguments.output + "_forward_paired.fq.gz", \
+			Arguments.output + "_forward_unpaired.fq.gz", \
+			Arguments.output + "_forIndelRealigner.intervals", \
+			Arguments.output + "_removedup_metrics.txt", \
+			Arguments.output + ".sam", \
+			Arguments.output + ".sai", \
+			Arguments.output + ".fq.gz", \
+			Arguments.output + ".bam", \
+			])
+		os.system(" ".join(cmds[0]))
+
+		if(Arguments.removeDuplicates or Arguments.indelRealigner) :
+			os.system("rm " + Arguments.output + "_sorted.ba*")
+
+		if(Arguments.removeDuplicates and Arguments.indelRealigner) :
+			os.system("rm " + Arguments.output + "_removedup.ba*")	
+
+
+		print "\n--> Remove duplicates files finish!\n"	
+
+
+if __name__ == "__main__":
+	main()	            
