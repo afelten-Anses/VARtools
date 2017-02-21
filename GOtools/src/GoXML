@@ -338,27 +338,37 @@ def UNIPROTtoGO(path,output,protlist,dicoGO,GOFile,GO_prok): #Uniprot to GO ids 
 							goDOMAIN=etree.SubElement(go,"DOMAIN")
 							goDESCRIPTION=etree.SubElement(go,"DESCRIPTION")
 							#Markups initialisation :end
-							term=term.split()#term=GO id + GO domain + GO description(format DESCRIPTION_word1 DESCRIPTION_word2 DESCRIPTION_wordn..)
+							#term=term.split()#term=GO id + GO domain + GO description(format DESCRIPTION_word1 DESCRIPTION_word2 DESCRIPTION_wordn..)
 							#split by "|"" in order to recognize these 3 categories
-							interm=str(term[0:]).split('|') 
+							#interm=str(term[0:]).split('|') 
+							interm=term.split('|')
 							#Some magic in order to have a clean ouput: start
 							goID.text=str(interm[0]).replace("['","")
-							goDOMAIN.text=str(interm[1]).rstrip('\n')
-							if "Component" in goDOMAIN.text:	# GO domain
-								goDOMAIN.text="Cellular Component"
-							elif "Function" in goDOMAIN.text:
-								goDOMAIN.text="Molecular Function"
-							elif "Process" in goDOMAIN.text:
-								goDOMAIN.text="Biological Process"
-							goDESCRIPTION.text=str(' '.join(interm[2:])).rstrip("']'")
-							goDESCRIPTION.text=str(goDESCRIPTION.text).replace("'","")
-							goDESCRIPTION.text=str(goDESCRIPTION.text).replace(",","")
-							#Some magic in order to have a clean ouput: end
-							for term in termsproklist:
-								if goID.text in term: #if goID is proka term
-									# INSERT the new informations in a duplicate XML at deepness lvl=3 in regard to <region>
-									region.insert(4,golist) 
-									del term #clear term from RAM
+							#print goID.text
+							
+
+							if len(interm)>1 :
+
+								goDOMAIN.text=str(interm[1]).rstrip('\n')
+								if "Component" in goDOMAIN.text:	# GO domain
+									goDOMAIN.text="Cellular Component"
+								elif "Function" in goDOMAIN.text:
+									goDOMAIN.text="Molecular Function"
+								elif "Process" in goDOMAIN.text:
+									goDOMAIN.text="Biological Process"
+								goDESCRIPTION.text=str(' '.join(interm[2:])).rstrip("']'")
+								goDESCRIPTION.text=str(goDESCRIPTION.text).replace("'","")
+								goDESCRIPTION.text=str(goDESCRIPTION.text).replace(",","")
+								#Some magic in order to have a clean ouput: end
+								for term in termsproklist:
+									if goID.text in term: #if goID is proka term
+										# INSERT the new informations in a duplicate XML at deepness lvl=3 in regard to <region>
+										region.insert(4,golist) 
+										del term #clear term from RAM
+
+							else:
+								print term			
+
 
 					#Else, if id exists and not and dicoGO 		
 					elif(protlist[i] !=''):
