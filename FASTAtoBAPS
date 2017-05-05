@@ -1,0 +1,77 @@
+#!/usr/bin/python
+# -*- coding: iso-8859-1 -*-
+import os, sys
+import argparse
+from Bio import SeqIO
+
+
+
+def get_parser():
+	"""
+	Parse arguments
+	@return: arguments list
+	@rtype: parser object
+	"""
+
+	parser = argparse.ArgumentParser(description='Parse FASTA file to BAPS input')
+
+	parser.add_argument('-i', action="store", dest='FASTA',
+						type=str, required=True, help='FASTA file (REQUIRED)')
+
+	parser.add_argument('-o', action="store", dest='output',
+						type=str, default="output", help='output file (default:output)')
+	
+	parser.add_argument('--withLabels', dest='label', action='store_true', \
+		help='add header in the 1st column (default:False)', default=False)
+
+
+	return parser
+
+
+#main function	
+def main():	
+
+	# Get arguments 
+	parser=get_parser()
+	
+	# Print parser.help if no arguments
+	if len(sys.argv)==1:
+		parser.print_help()
+		sys.exit(1)
+	
+	Arguments=parser.parse_args()	
+
+	dicoResult = {}
+
+	for seq_record in SeqIO.parse(Arguments.FASTA, "fasta"):
+
+		header = seq_record.id
+
+		seq = str(seq_record.seq)
+		seq = seq.replace('A','1')
+		seq = seq.replace('T','2')
+		seq = seq.replace('G','3')
+		seq = seq.replace('C','4')
+
+		seq = list(seq)
+		seq = '\t'.join(seq)
+
+		dicoResult[header] = seq
+
+	out = open(Arguments.output, 'w')
+	
+	for element in dicoResult :
+
+		if Arguments.label :
+
+			out.write(element + '\t')
+
+		out.write(dicoResult[element] + '\n')		
+
+
+
+
+
+
+if __name__ == "__main__":
+	main()	     

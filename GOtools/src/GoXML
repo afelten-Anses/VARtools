@@ -32,7 +32,7 @@ def get_parser():
 
 
 	parser.add_argument('-obo', action="store", dest='obo', 
-						type=str, required=True, help='go-basi.obo path(REQUIRED)')
+						type=str, required=True, help='go-basi.obo path (REQUIRED)')
 
 
 	parser.add_argument('-o', action="store", dest='output', 
@@ -45,6 +45,10 @@ def get_parser():
 
 	parser.add_argument('-g', action="store", dest='GOdatabases', 
 						type=str, required=False, help='EBI-GO_databases.tsv path')
+
+
+	parser.add_argument('-p', action="store", dest='GoProkk', 
+						type=str, required=True, help='GO_prok.txt path (REQUIRED)')
 
 
 	parser.add_argument('--withHomoplasy', dest='withHomoplasy', action='store_true', help='keep homoplasy variants', default=False)
@@ -150,12 +154,16 @@ def extractNP(path, withHomoplasy): #Retrieve NP ids from XML file
 	
 	for var in tree.xpath("NODE/COMPARISON/VARIANTS/VARIANT"):
 
+		#print var
+
 		homop = var.findall('HOMOPLASY')[0]
 		
 		if(homop.text == "Yes" and not withHomoplasy):
-			break
+			pass
 
-		for nps in var.xpath("REGION/TRANSCRIT"):	
+		for nps in var.xpath("REGION/TRANSCRIT"):
+
+			#print 	nps.text
 
 		#for nps in tree.xpath("NODE/COMPARISON/VARIANTS/VARIANT/REGION/TRANSCRIT"):
 
@@ -197,6 +205,8 @@ def idmapping(nplist,dicoNP,NPfile): # ID mapping from NP LIST (not from XML, bc
 	#Dublicate protlist variable (protlist=nplist=list of np values)
 	protlist=nplist
 
+	print nplist
+
 	#DicoNP store every NP to Uniprot ids
 	for np in range(len(nplist)):
 		print np
@@ -212,11 +222,14 @@ def idmapping(nplist,dicoNP,NPfile): # ID mapping from NP LIST (not from XML, bc
 			#if page!=None : request completed. 
 			page=None
 
+			#print nplist[np]
+
 			if "P_" in nplist[np]:
 
 				while page==None: #While request is not completed, retry.
 
 					try :
+
 
 						#RETRIEVE UNIPROT ID FROM NP ID
 						#Custom url in order to retrieve Uniprot ids from NP ids
@@ -468,6 +481,7 @@ def UNIPROTtoGO(path,output,protlist,dicoGO,GOFile,GO_prok): #Uniprot to GO ids 
 
 def main():	
 
+
 	#################counter initialisation ########################
 	t1=time.time()
 	##################### get parser ###############################
@@ -483,7 +497,7 @@ def main():
 	Arguments=parser.parse_args()
 
 	#################### Create GO-slim file #######################
-	os.system("GOslimmer_xml -i " + Arguments.obo + " -o GO_prok.txt")
+	os.system("GOslimmer_xml -i " + Arguments.obo + " -o " + Arguments.GoProkk)
 
 	nplist=extractNP(Arguments.input, Arguments.withHomoplasy)
 
@@ -505,7 +519,7 @@ def main():
 	if Arguments.GOdatabases :
 		dicoGO = readDBGOFile(Arguments.GOdatabases)
 		#and start GO retrieving with the correct arguments
-		UNIPROTtoGO(Arguments.input,Arguments.output,protlist,dicoGO,Arguments.GOdatabases, "GO_prok.txt")
+		UNIPROTtoGO(Arguments.input,Arguments.output,protlist,dicoGO,Arguments.GOdatabases, Arguments.GoProkk)
 	
 	else :
 		dicoGO = {}
@@ -514,7 +528,7 @@ def main():
 		dicoGO = readDBGOFile(Arguments.GOdatabases)
 		f.close()	
 		#and start GO retrieving with the correct arguments
-		UNIPROTtoGO(Arguments.input,Arguments.output,protlist,dicoGO,Arguments.GOdatabases, "GO_prok.txt")
+		UNIPROTtoGO(Arguments.input,Arguments.output,protlist,dicoGO,Arguments.GOdatabases, Arguments.GoProkk)
 
 	#Show counter results
 	print "\n====================================================================\nSCRIPT FINISHED IN ",int((time.time()-t1)),"SECONDS"

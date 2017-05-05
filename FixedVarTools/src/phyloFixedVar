@@ -453,23 +453,55 @@ def addANN(objetNucl, annotation):
 	@type annotation : string
 	'''
 
+	annotation_exist = False
+
 	# select the annotation informations adding by SNPEff
 	for element in annotation.split(";") :
 		if "ANN=" in element :
-			annotation = element.split("|")
+			annotation_exist = True
+			annotation = element.split(";")[-1]
 			break
 
-	# if variant in a intergenic region, no additional informations		
-	if "intergenic_region" in annotation[1] :
+	# if variant in a intergenic region, no additional informations			
+	if ("intergenic_region" in annotation) or (annotation_exist == False):
 		objetNucl.setRegion("intergenic")
+
 
 	# else, add impact, gene name and id, and transcrit id informations	
 	else:
 		objetNucl.setRegion("intragenic")	
-		objetNucl.setImpact(annotation[1])
-		objetNucl.setGeneName(annotation[3])
-		objetNucl.setGeneID(annotation[4])
-		objetNucl.setTranscritID(annotation[6])
+
+		all_annotation = annotation.split(",")
+		all_annotation[0] = all_annotation[0].replace("ANN=","")
+
+		for ann in all_annotation :
+
+			ann = ann.split('|')
+			reference_allele = True
+
+
+			if(ann[0] == objetNucl.var):
+
+				reference_allele = False
+
+				objetNucl.setImpact(ann[1])
+				objetNucl.setGeneName(ann[3])
+				objetNucl.setGeneID(ann[4])
+				objetNucl.setTranscritID(ann[6])	
+				break
+
+			else :
+			
+				geneName = ann[3]
+				geneID = ann[4]
+				transcritID = ann[6]	
+
+		if reference_allele :
+		
+			objetNucl.setImpact("NULL")
+			objetNucl.setGeneName(geneName)
+			objetNucl.setGeneID(geneID)
+			objetNucl.setTranscritID(transcritID)
 
 
 def readVCFfile(file):

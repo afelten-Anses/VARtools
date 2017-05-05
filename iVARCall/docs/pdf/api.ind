@@ -1,0 +1,42 @@
+\begin{theindex}
+
+  \item script-iReportMaker \textit{(script)}, \hyperpage{2--3}
+    \subitem script-iReportMaker.extractReadStatistics \textit{(function)}, 
+		\hyperpage{2}
+    \subitem script-iReportMaker.get\_parser \textit{(function)}, 
+		\hyperpage{2}
+    \subitem script-iReportMaker.main \textit{(function)}, 
+		\hyperpage{3}
+    \subitem script-iReportMaker.texHeader \textit{(function)}, 
+		\hyperpage{2}
+    \subitem script-iReportMaker.version \textit{(function)}, 
+		\hyperpage{3}
+    \subitem script-iReportMaker.workdir \textit{(function)}, 
+		\hyperpage{2}
+    \subitem script-iReportMaker.writeVarCallCommand \textit{(function)}, 
+		\hyperpage{2}
+  \item script-iVARCall \textit{(script)}, \hyperpage{4--5}
+    \subitem script-iVARCall.checkFiles \textit{(function)}, 
+		\hyperpage{4}
+    \subitem script-iVARCall.checkPE \textit{(function)}, \hyperpage{4}
+    \subitem script-iVARCall.commandLaunched \textit{(function)}, 
+		\hyperpage{4}
+    \subitem script-iVARCall.get\_parser \textit{(function)}, 
+		\hyperpage{4}
+    \subitem script-iVARCall.main \textit{(function)}, \hyperpage{5}
+  \item script-iVCFmaker\_SNP \textit{(script)}, \hyperpage{6}
+    \subitem script-iVCFmaker\_SNP.exec\_commands \textit{(function)}, 
+		\hyperpage{6}
+    \subitem script-iVCFmaker\_SNP.get\_parser \textit{(function)}, 
+		\hyperpage{6}
+    \subitem script-iVCFmaker\_SNP.main \textit{(function)}, 
+		\hyperpage{6}
+  \item script-iVCFmerge\_SNP \textit{(script)}, \hyperpage{7}
+    \subitem script-iVCFmerge\_SNP.exec\_commands \textit{(function)}, 
+		\hyperpage{7}
+    \subitem script-iVCFmerge\_SNP.get\_parser \textit{(function)}, 
+		\hyperpage{7}
+    \subitem script-iVCFmerge\_SNP.main \textit{(function)}, 
+		\hyperpage{7}
+
+\end{theindex}
