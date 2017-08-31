@@ -31,6 +31,9 @@ def get_parser():
 	parser.add_argument('-o', action="store", dest='output', 
 						type=str, default='output.fasta', help='output (default:output.fasta)')
 
+	parser.add_argument('--NoINDELs', dest='NoINDELs', action='store_true', help='remove INDELs position (default:False)', default=False)
+
+
 	return parser
 
 
@@ -111,6 +114,25 @@ def main():
 	dicoResult_ALL = {}
 	pos = 0
 
+
+	if Arguments.NoINDELs :
+		VCFfile = open(Arguments.VCF, 'rb')
+		lines = VCFfile.readlines()
+		VCFfile.close()
+		tmpFile = open("tmp_pseudo.vcf",'w')
+
+		for line in lines :
+			row = line.split('\t')
+			if line[0]=='#':
+				tmpFile.write(line)
+			elif(len(row[3])==1 and len(row[4])==1):
+				tmpFile.write(line)		
+
+		tmpFile.close()
+		Arguments.VCF = "tmp_pseudo.vcf"
+
+
+
 	with open(Arguments.VCF, 'rb') as csvfile:
 		TSVreader = csv.reader(csvfile, delimiter='\t')
 
@@ -157,7 +179,7 @@ def main():
 							for baseVar in variant :
 								if len(baseVar) > maxLen :
 									maxLen = len(baseVar)
-							
+
 							if maxLen > 1 :
 
 								if j == 0 :
@@ -184,7 +206,8 @@ def main():
 
 	write_fasta(Arguments.output, dicoResult_ALL)
 
-
+	if Arguments.NoINDELs :
+		os.remove("tmp_pseudo.vcf")
 			
 
 
