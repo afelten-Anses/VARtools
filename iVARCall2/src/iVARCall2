@@ -256,12 +256,12 @@ def main():
 
 		if("_R1" in outputName):
 			outputName = outputName.replace("_R1","")
-		if("_1" in outputName):
-			outputName = outputName.replace("_1","")
+		if("_1." in outputName):
+			outputName = outputName.replace("_1.",".")
 		if("_R2" in outputName):
 			outputName = outputName.replace("_R2","")		
-		if("_2" in outputName):
-			outputName = outputName.replace("_2","")	
+		if("_2." in outputName):
+			outputName = outputName.replace("_2.",".")	
 
 		print "     - make BAM for " + outputName
 		outputName_sample = outputName

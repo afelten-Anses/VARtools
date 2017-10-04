@@ -549,7 +549,8 @@ def main():
 		if("removedup" in output_BAMFile):
 			modified_output = output_BAMFile.split(".")[0] + "_realigned.bam"
 		else :	
-			modified_output = output_BAMFile.split("_")[0] + "_realigned.bam"
+			#modified_output = output_BAMFile.split("_")[0] + "_realigned.bam"
+			modified_output = '_'.join(output_BAMFile.split("_")[0:-1]) + "_realigned.bam"
 
 		cmds.append(["java -Xmx4g -jar ", Arguments.GATKJAR, "-T IndelRealigner", "-R", Arguments.refFASTA, \
 			"-I", output_BAMFile, "-targetIntervals", Arguments.output + "_forIndelRealigner.intervals", \
