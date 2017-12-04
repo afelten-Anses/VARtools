@@ -24,7 +24,7 @@ def get_parser():
 	@rtype: parser object
 	"""
 
-	parser = argparse.ArgumentParser(description=' d- and -g are optional')
+	parser = argparse.ArgumentParser(description=' -d and -g are optional')
 
 
 	parser.add_argument('-i', action="store", dest='input', 
@@ -205,11 +205,11 @@ def idmapping(nplist,dicoNP,NPfile): # ID mapping from NP LIST (not from XML, bc
 	#Dublicate protlist variable (protlist=nplist=list of np values)
 	protlist=nplist
 
-	print nplist
+	#print nplist
 
 	#DicoNP store every NP to Uniprot ids
 	for np in range(len(nplist)):
-		print np
+		#print np
 		#For every NP in list, if they exists in DicoNP (from local file), store them in protlist 
 		if nplist[np] in dicoNP and "P_" in nplist[np] and nplist[np]!='':
 
@@ -380,7 +380,7 @@ def UNIPROTtoGO(path,output,protlist,dicoGO,GOFile,GO_prok): #Uniprot to GO ids 
 										del term #clear term from RAM
 
 							else:
-								print term			
+								#print term			
 
 
 					#Else, if id exists and not and dicoGO 		
