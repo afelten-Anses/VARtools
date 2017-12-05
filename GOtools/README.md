@@ -70,7 +70,7 @@ Parameters
 
  * **'-i':** XML path (REQUIRED)
  * **'-obo':** go-basic.obo path (REQUIRED)
- * ** '-o':** output prefix (REQUIRED)
+ * **'-o':** output prefix (REQUIRED)
  * **'-d':** NP-EBI_databases.tsv path 
  * **'-g':** EBI-GO_databases.tsv path
  * **'--withHomoplasy'**: keep homoplasy variants
@@ -78,7 +78,7 @@ Parameters
 ##  EveryGO parameters
 
  * **'-xml':** XML input file obtained from the GoXML including all variants (REQUIRED)
- * **'-xmlcomp': **XML input file obtained from the GoXML including variants of interest (REQUIRED)
+ * **'-xmlcomp':** XML input file obtained from the GoXML including variants of interest (REQUIRED)
  * **'-comp':** one or several values refering to XML comparison ids (ascending order, REQUIRED)
  * **'-rpath':** Rscripts folder path' (REQUIRED) 
  * **'--mkuniverse':** build universe
