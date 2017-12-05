@@ -368,7 +368,7 @@ def UNIPROTtoGO(path,output,protlist,dicoGO,GOFile,GO_prok): #Uniprot to GO ids 
 										region.insert(4,golist) 
 										del term #clear term from RAM
 
-							else:
+							#else:
 								#print term			
 
 
@@ -380,9 +380,10 @@ def UNIPROTtoGO(path,output,protlist,dicoGO,GOFile,GO_prok): #Uniprot to GO ids 
 						while goterm==None:
 
 							try:
-
-								urllib.urlretrieve('http://www.ebi.ac.uk/QuickGO-Old/GAnnotation?protein='+str(protlist[i])+'&col=goID,aspect,goName&format=tsv',tsvname)
-
+								print 'http://www.ebi.ac.uk/QuickGO-Old/GAnnotation?protein='+str(protlist[i])+'&col=goID,aspect,goName&format=tsv'
+								#urllib.urlretrieve('http://www.ebi.ac.uk/QuickGO-Old/GAnnotation?protein='+str(protlist[i])+'&col=goID,aspect,goName&format=tsv',tsvname)
+								os.system('wget http://www.ebi.ac.uk/QuickGO-Old/GAnnotation?protein='+str(protlist[i])+\
+									'&col=goID,aspect,goName&format=tsv > ' + tsvname + " > /dev/null 2>&1")
 								#retrieve .tsv file which contains GO IDs for this Uniprot ID
 								with open(tsvname,'r') as sourcetmp:
 
