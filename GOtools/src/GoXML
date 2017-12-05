@@ -8,7 +8,7 @@ from lxml import etree 				#xml parser
 import xml.etree.ElementTree as ET 	#xml parser ElemenTree only
 
 __doc__="""
-GoXML workfow. In order to add GO-terms from a XML file and generate a non-enriched universe of GO-terms.
+GoXML workfow + GOslimmer_xml wrapper. In order to add GO-terms from a XML file and generate a non-enriched universe of GO-terms.
 
 @requires: U{python 2.7<https://www.python.org/downloads/>} (tested with 2.7.6)
 @requires: U{PyVCF<https://github.com/jamescasbon/PyVCF>}
