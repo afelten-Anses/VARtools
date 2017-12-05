@@ -1,0 +1,332 @@
+<?xml version="1.0" encoding="ascii"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+          "DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+  <title>EveryGO</title>
+  <link rel="stylesheet" href="epydoc.css" type="text/css" />
+  <script type="text/javascript" src="epydoc.js"></script>
+</head>
+
+<body bgcolor="white" text="black" link="blue" vlink="#204080"
+      alink="#204080">
+<!-- ==================== NAVIGATION BAR ==================== -->
+<table class="navbar" border="0" width="100%" cellpadding="0"
+       bgcolor="#a0c0ff" cellspacing="0">
+  <tr valign="middle">
+
+  <!-- Tree link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="module-tree.html">Trees</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Index link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="identifier-index.html">Indices</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Help link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="help.html">Help</a>&nbsp;&nbsp;&nbsp;</th>
+
+      <th class="navbar" width="100%"></th>
+  </tr>
+</table>
+<table width="100%" cellpadding="0" cellspacing="0">
+  <tr valign="top">
+    <td width="100%">
+      <span class="breadcrumbs">
+        Module&nbsp;EveryGO
+      </span>
+    </td>
+    <td>
+      <table cellpadding="0" cellspacing="0">
+        <!-- hide/show private -->
+        <tr><td align="right"><span class="options">[<a href="javascript:void(0);" class="privatelink"
+    onclick="toggle_private();">hide&nbsp;private</a>]</span></td></tr>
+        <tr><td align="right"><span class="options"
+            >[<a href="frames.html" target="_top">frames</a
+            >]&nbsp;|&nbsp;<a href="EveryGO-pysrc.html"
+            target="_top">no&nbsp;frames</a>]</span></td></tr>
+      </table>
+    </td>
+  </tr>
+</table>
+<h1 class="epydoc">Source Code for <a href="EveryGO-module.html">Module EveryGO</a></h1>
+<pre class="py-src">
+<a name="L1"></a><tt class="py-lineno">  1</tt>  <tt class="py-line"><tt class="py-comment">#!/usr/bin/env python</tt> </tt>
+<a name="L2"></a><tt class="py-lineno">  2</tt>  <tt class="py-line"><tt class="py-comment"># -*- coding: utf-8 -*-</tt> </tt>
+<a name="L3"></a><tt class="py-lineno">  3</tt>  <tt class="py-line"><tt class="py-keyword">import</tt> <tt class="py-name">os</tt><tt class="py-op">,</tt> <tt class="py-name">sys</tt> </tt>
+<a name="L4"></a><tt class="py-lineno">  4</tt>  <tt class="py-line"><tt class="py-keyword">import</tt> <tt class="py-name">argparse</tt>                                 <tt class="py-comment">#arguments parser</tt> </tt>
+<a name="L5"></a><tt class="py-lineno">  5</tt>  <tt class="py-line"><tt class="py-keyword">import</tt> <tt class="py-name">uuid</tt>                                     <tt class="py-comment">#uuid filename format</tt> </tt>
+<a name="L6"></a><tt class="py-lineno">  6</tt>  <tt class="py-line"><tt class="py-keyword">from</tt> <tt class="py-name">lxml</tt> <tt class="py-keyword">import</tt> <tt class="py-name">etree</tt>                          <tt class="py-comment">#xml parser</tt> </tt>
+<a name="L7"></a><tt class="py-lineno">  7</tt>  <tt class="py-line"><tt class="py-keyword">import</tt> <tt class="py-name">xml</tt><tt class="py-op">.</tt><tt class="py-name">etree</tt><tt class="py-op">.</tt><tt class="py-name">ElementTree</tt> <tt class="py-keyword">as</tt> <tt class="py-name">ET</tt>      <tt class="py-comment">#xml parser ElemenTree only</tt> </tt>
+<a name="L8"></a><tt class="py-lineno">  8</tt>  <tt class="py-line"> </tt>
+<a name="L9"></a><tt class="py-lineno">  9</tt>  <tt class="py-line"><tt id="link-0" class="py-name" targets="Variable EveryGO.__doc__=EveryGO-module.html#__doc__,Variable GOslimmer_xml.__doc__=GOslimmer_xml-module.html#__doc__,Variable GOtrimmer.__doc__=GOtrimmer-module.html#__doc__,Variable GetGOxML.__doc__=GetGOxML-module.html#__doc__,Variable GoXML.__doc__=GoXML-module.html#__doc__,Variable VCFtoGO.__doc__=VCFtoGO-module.html#__doc__"><a title="EveryGO.__doc__
+GOslimmer_xml.__doc__
+GOtrimmer.__doc__
+GetGOxML.__doc__
+GoXML.__doc__
+VCFtoGO.__doc__" class="py-name" href="#" onclick="return doclink('link-0', '__doc__', 'link-0');">__doc__</a></tt><tt class="py-op">=</tt><tt class="py-string">"""</tt> </tt>
+<a name="L10"></a><tt class="py-lineno"> 10</tt>  <tt class="py-line"><tt class="py-string">EveryGO workfow. In order to perform GO-terms enrichment analysis for one or more nodes/comparisons of the phylogeny stored in the XML file.</tt> </tt>
+<a name="L11"></a><tt class="py-lineno"> 11</tt>  <tt class="py-line"><tt class="py-string"></tt> </tt>
+<a name="L12"></a><tt class="py-lineno"> 12</tt>  <tt class="py-line"><tt class="py-string">@requires: U{python 2.7&lt;https://www.python.org/downloads/&gt;} (tested with 2.7.6)</tt> </tt>
+<a name="L13"></a><tt class="py-lineno"> 13</tt>  <tt class="py-line"><tt class="py-string">@requires: U{lxml&lt;https://github.com/lxml/lxml&gt;}</tt> </tt>
+<a name="L14"></a><tt class="py-lineno"> 14</tt>  <tt class="py-line"><tt class="py-string">@requires: GOtrimmer_xml</tt> </tt>
+<a name="L15"></a><tt class="py-lineno"> 15</tt>  <tt class="py-line"><tt class="py-string">@requires: GOwalker</tt> </tt>
+<a name="L16"></a><tt class="py-lineno"> 16</tt>  <tt class="py-line"><tt class="py-string">@requires: GoView</tt> </tt>
+<a name="L17"></a><tt class="py-lineno"> 17</tt>  <tt class="py-line"><tt class="py-string">"""</tt> </tt>
+<a name="L18"></a><tt class="py-lineno"> 18</tt>  <tt class="py-line"> </tt>
+<a name="L19"></a><tt class="py-lineno"> 19</tt>  <tt class="py-line"> </tt>
+<a name="L20"></a><tt class="py-lineno"> 20</tt>  <tt class="py-line"><tt class="py-comment">########################################################################################################################################################</tt> </tt>
+<a name="L21"></a><tt class="py-lineno"> 21</tt>  <tt class="py-line"><tt class="py-comment">##################################################################EVERYGO v 1.00########################################################################</tt> </tt>
+<a name="L22"></a><tt class="py-lineno"> 22</tt>  <tt class="py-line"><tt class="py-comment">########################################################################################################################################################</tt> </tt>
+<a name="L23"></a><tt class="py-lineno"> 23</tt>  <tt class="py-line"> </tt>
+<a name="L24"></a><tt class="py-lineno"> 24</tt>  <tt class="py-line"> </tt>
+<a name="get_parser"></a><div id="get_parser-def"><a name="L25"></a><tt class="py-lineno"> 25</tt> <a class="py-toggle" href="#" id="get_parser-toggle" onclick="return toggle('get_parser');">-</a><tt class="py-line"><tt class="py-keyword">def</tt> <a class="py-def-name" href="EveryGO-module.html#get_parser">get_parser</a><tt class="py-op">(</tt><tt class="py-op">)</tt><tt class="py-op">:</tt>       <tt class="py-comment">#Parse arguments</tt> </tt>
+</div><a name="L26"></a><tt class="py-lineno"> 26</tt>  <tt class="py-line">        <tt class="py-docstring">"""</tt> </tt>
+<a name="L27"></a><tt class="py-lineno"> 27</tt>  <tt class="py-line"><tt class="py-docstring">        Arguments setting and parsing</tt> </tt>
+<a name="L28"></a><tt class="py-lineno"> 28</tt>  <tt class="py-line"><tt class="py-docstring">        @return: arguments list</tt> </tt>
+<a name="L29"></a><tt class="py-lineno"> 29</tt>  <tt class="py-line"><tt class="py-docstring">        @rtype: parser object</tt> </tt>
+<a name="L30"></a><tt class="py-lineno"> 30</tt>  <tt class="py-line"><tt class="py-docstring">        """</tt> </tt>
+<a name="L31"></a><tt class="py-lineno"> 31</tt>  <tt class="py-line"> </tt>
+<a name="L32"></a><tt class="py-lineno"> 32</tt>  <tt class="py-line">        <tt id="link-1" class="py-name" targets="Variable GOtrimmer.parser=GOtrimmer-module.html#parser"><a title="GOtrimmer.parser" class="py-name" href="#" onclick="return doclink('link-1', 'parser', 'link-1');">parser</a></tt> <tt class="py-op">=</tt> <tt class="py-name">argparse</tt><tt class="py-op">.</tt><tt class="py-name">ArgumentParser</tt><tt class="py-op">(</tt><tt class="py-name">description</tt><tt class="py-op">=</tt><tt class="py-string">'Perform GO-terms enrichment analysis for one or more nodes/comparisons of the phylogeny stored in the XML file'</tt><tt class="py-op">)</tt> </tt>
+<a name="L33"></a><tt class="py-lineno"> 33</tt>  <tt class="py-line"> </tt>
+<a name="L34"></a><tt class="py-lineno"> 34</tt>  <tt class="py-line"> </tt>
+<a name="L35"></a><tt class="py-lineno"> 35</tt>  <tt class="py-line">        <tt id="link-2" class="py-name"><a title="GOtrimmer.parser" class="py-name" href="#" onclick="return doclink('link-2', 'parser', 'link-1');">parser</a></tt><tt class="py-op">.</tt><tt class="py-name">add_argument</tt><tt class="py-op">(</tt><tt class="py-string">'-xml'</tt><tt class="py-op">,</tt> <tt class="py-name">action</tt><tt class="py-op">=</tt><tt class="py-string">"store"</tt><tt class="py-op">,</tt> <tt class="py-name">dest</tt><tt class="py-op">=</tt><tt class="py-string">'Xml'</tt><tt class="py-op">,</tt>  </tt>
+<a name="L36"></a><tt class="py-lineno"> 36</tt>  <tt class="py-line">                                                <tt class="py-name">type</tt><tt class="py-op">=</tt><tt class="py-name">str</tt><tt class="py-op">,</tt> <tt class="py-name">required</tt><tt class="py-op">=</tt><tt class="py-name">True</tt><tt class="py-op">,</tt> <tt class="py-name">help</tt><tt class="py-op">=</tt><tt class="py-string">'XML input file obtained from the GoXML including all variants (REQUIRED)'</tt><tt class="py-op">)</tt> </tt>
+<a name="L37"></a><tt class="py-lineno"> 37</tt>  <tt class="py-line"> </tt>
+<a name="L38"></a><tt class="py-lineno"> 38</tt>  <tt class="py-line">        <tt id="link-3" class="py-name"><a title="GOtrimmer.parser" class="py-name" href="#" onclick="return doclink('link-3', 'parser', 'link-1');">parser</a></tt><tt class="py-op">.</tt><tt class="py-name">add_argument</tt><tt class="py-op">(</tt><tt class="py-string">'-xmlcomp'</tt><tt class="py-op">,</tt> <tt class="py-name">action</tt><tt class="py-op">=</tt><tt class="py-string">"store"</tt><tt class="py-op">,</tt> <tt class="py-name">dest</tt><tt class="py-op">=</tt><tt class="py-string">'XmlComp'</tt><tt class="py-op">,</tt>  </tt>
+<a name="L39"></a><tt class="py-lineno"> 39</tt>  <tt class="py-line">                                                <tt class="py-name">type</tt><tt class="py-op">=</tt><tt class="py-name">str</tt><tt class="py-op">,</tt> <tt class="py-name">required</tt><tt class="py-op">=</tt><tt class="py-name">True</tt><tt class="py-op">,</tt> <tt class="py-name">help</tt><tt class="py-op">=</tt><tt class="py-string">'XML input file obtained from the GoXML including variants of interest (REQUIRED)'</tt><tt class="py-op">)</tt>        </tt>
+<a name="L40"></a><tt class="py-lineno"> 40</tt>  <tt class="py-line"> </tt>
+<a name="L41"></a><tt class="py-lineno"> 41</tt>  <tt class="py-line">        <tt id="link-4" class="py-name"><a title="GOtrimmer.parser" class="py-name" href="#" onclick="return doclink('link-4', 'parser', 'link-1');">parser</a></tt><tt class="py-op">.</tt><tt class="py-name">add_argument</tt><tt class="py-op">(</tt><tt class="py-string">'-comp'</tt><tt class="py-op">,</tt> <tt class="py-name">action</tt><tt class="py-op">=</tt><tt class="py-string">"store"</tt><tt class="py-op">,</tt> <tt class="py-name">dest</tt><tt class="py-op">=</tt><tt class="py-string">'Comp'</tt><tt class="py-op">,</tt>  </tt>
+<a name="L42"></a><tt class="py-lineno"> 42</tt>  <tt class="py-line">                                                <tt class="py-name">type</tt><tt class="py-op">=</tt><tt class="py-name">str</tt><tt class="py-op">,</tt> <tt class="py-name">required</tt><tt class="py-op">=</tt><tt class="py-name">True</tt><tt class="py-op">,</tt> <tt class="py-name">nargs</tt><tt class="py-op">=</tt><tt class="py-string">'+'</tt><tt class="py-op">,</tt> <tt class="py-name">help</tt><tt class="py-op">=</tt><tt class="py-string">'one or several values refering to XML comparison ids (ascending order, REQUIRED)'</tt><tt class="py-op">)</tt> </tt>
+<a name="L43"></a><tt class="py-lineno"> 43</tt>  <tt class="py-line">  </tt>
+<a name="L44"></a><tt class="py-lineno"> 44</tt>  <tt class="py-line">        <tt id="link-5" class="py-name"><a title="GOtrimmer.parser" class="py-name" href="#" onclick="return doclink('link-5', 'parser', 'link-1');">parser</a></tt><tt class="py-op">.</tt><tt class="py-name">add_argument</tt><tt class="py-op">(</tt><tt class="py-string">'-rpath'</tt><tt class="py-op">,</tt> <tt class="py-name">action</tt><tt class="py-op">=</tt><tt class="py-string">"store"</tt><tt class="py-op">,</tt> <tt class="py-name">dest</tt><tt class="py-op">=</tt><tt class="py-string">'Rpath'</tt><tt class="py-op">,</tt>  </tt>
+<a name="L45"></a><tt class="py-lineno"> 45</tt>  <tt class="py-line">                                                <tt class="py-name">type</tt><tt class="py-op">=</tt><tt class="py-name">str</tt><tt class="py-op">,</tt> <tt class="py-name">required</tt><tt class="py-op">=</tt><tt class="py-name">True</tt><tt class="py-op">,</tt> <tt class="py-name">help</tt><tt class="py-op">=</tt><tt class="py-string">'Rscripts folder path (REQUIRED)'</tt><tt class="py-op">)</tt>                 </tt>
+<a name="L46"></a><tt class="py-lineno"> 46</tt>  <tt class="py-line"> </tt>
+<a name="L47"></a><tt class="py-lineno"> 47</tt>  <tt class="py-line">        <tt id="link-6" class="py-name"><a title="GOtrimmer.parser" class="py-name" href="#" onclick="return doclink('link-6', 'parser', 'link-1');">parser</a></tt><tt class="py-op">.</tt><tt class="py-name">add_argument</tt><tt class="py-op">(</tt><tt class="py-string">'--mkuniverse'</tt><tt class="py-op">,</tt> <tt class="py-name">dest</tt><tt class="py-op">=</tt><tt class="py-string">'mkuniverse'</tt><tt class="py-op">,</tt> <tt class="py-name">action</tt><tt class="py-op">=</tt><tt class="py-string">'store_true'</tt><tt class="py-op">,</tt>  </tt>
+<a name="L48"></a><tt class="py-lineno"> 48</tt>  <tt class="py-line">                                                <tt class="py-name">help</tt><tt class="py-op">=</tt><tt class="py-string">'build universe'</tt><tt class="py-op">,</tt> <tt class="py-name">default</tt><tt class="py-op">=</tt><tt class="py-name">False</tt><tt class="py-op">)</tt> </tt>
+<a name="L49"></a><tt class="py-lineno"> 49</tt>  <tt class="py-line"> </tt>
+<a name="L50"></a><tt class="py-lineno"> 50</tt>  <tt class="py-line">        <tt id="link-7" class="py-name"><a title="GOtrimmer.parser" class="py-name" href="#" onclick="return doclink('link-7', 'parser', 'link-1');">parser</a></tt><tt class="py-op">.</tt><tt class="py-name">add_argument</tt><tt class="py-op">(</tt><tt class="py-string">'--view'</tt><tt class="py-op">,</tt> <tt class="py-name">dest</tt><tt class="py-op">=</tt><tt class="py-string">'View'</tt><tt class="py-op">,</tt> <tt class="py-name">action</tt><tt class="py-op">=</tt><tt class="py-string">'store_true'</tt><tt class="py-op">,</tt>  </tt>
+<a name="L51"></a><tt class="py-lineno"> 51</tt>  <tt class="py-line">                                                <tt class="py-name">help</tt><tt class="py-op">=</tt><tt class="py-string">'generate graphical representation'</tt><tt class="py-op">,</tt> <tt class="py-name">default</tt><tt class="py-op">=</tt><tt class="py-name">False</tt><tt class="py-op">)</tt> </tt>
+<a name="L52"></a><tt class="py-lineno"> 52</tt>  <tt class="py-line"> </tt>
+<a name="L53"></a><tt class="py-lineno"> 53</tt>  <tt class="py-line">        <tt class="py-keyword">return</tt> <tt id="link-8" class="py-name"><a title="GOtrimmer.parser" class="py-name" href="#" onclick="return doclink('link-8', 'parser', 'link-1');">parser</a></tt> </tt>
+</div><a name="L54"></a><tt class="py-lineno"> 54</tt>  <tt class="py-line"> </tt>
+<a name="L55"></a><tt class="py-lineno"> 55</tt>  <tt class="py-line"> </tt>
+<a name="makeuniverse"></a><div id="makeuniverse-def"><a name="L56"></a><tt class="py-lineno"> 56</tt> <a class="py-toggle" href="#" id="makeuniverse-toggle" onclick="return toggle('makeuniverse');">-</a><tt class="py-line"><tt class="py-keyword">def</tt> <a class="py-def-name" href="EveryGO-module.html#makeuniverse">makeuniverse</a><tt class="py-op">(</tt><tt class="py-param">xmlname</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+</div><div id="makeuniverse-collapsed" style="display:none;" pad="+++" indent="++++"></div><div id="makeuniverse-expanded"><a name="L57"></a><tt class="py-lineno"> 57</tt>  <tt class="py-line">        <tt class="py-docstring">"""</tt> </tt>
+<a name="L58"></a><tt class="py-lineno"> 58</tt>  <tt class="py-line"><tt class="py-docstring">        Make universe of GO-terms from the XML file</tt> </tt>
+<a name="L59"></a><tt class="py-lineno"> 59</tt>  <tt class="py-line"><tt class="py-docstring">        @param xmlname: the xml filename</tt> </tt>
+<a name="L60"></a><tt class="py-lineno"> 60</tt>  <tt class="py-line"><tt class="py-docstring">        @type xmlname: string</tt> </tt>
+<a name="L61"></a><tt class="py-lineno"> 61</tt>  <tt class="py-line"><tt class="py-docstring">        """</tt> </tt>
+<a name="L62"></a><tt class="py-lineno"> 62</tt>  <tt class="py-line">        <tt class="py-keyword">print</tt> <tt class="py-string">"Making Universe...\n"</tt> </tt>
+<a name="L63"></a><tt class="py-lineno"> 63</tt>  <tt class="py-line">        <tt id="link-9" class="py-name"><a title="GOtrimmer.parser" class="py-name" href="#" onclick="return doclink('link-9', 'parser', 'link-1');">parser</a></tt> <tt class="py-op">=</tt> <tt class="py-name">etree</tt><tt class="py-op">.</tt><tt class="py-name">XMLParser</tt><tt class="py-op">(</tt><tt class="py-name">remove_blank_text</tt><tt class="py-op">=</tt><tt class="py-name">True</tt><tt class="py-op">)</tt> </tt>
+<a name="L64"></a><tt class="py-lineno"> 64</tt>  <tt class="py-line">        <tt class="py-name">tree</tt> <tt class="py-op">=</tt> <tt class="py-name">etree</tt><tt class="py-op">.</tt><tt class="py-name">ElementTree</tt><tt class="py-op">(</tt><tt class="py-op">)</tt> </tt>
+<a name="L65"></a><tt class="py-lineno"> 65</tt>  <tt class="py-line">        <tt class="py-name">tree</tt> <tt class="py-op">=</tt><tt class="py-name">etree</tt><tt class="py-op">.</tt><tt class="py-name">parse</tt><tt class="py-op">(</tt><tt class="py-name">xmlname</tt><tt class="py-op">,</tt><tt id="link-10" class="py-name"><a title="GOtrimmer.parser" class="py-name" href="#" onclick="return doclink('link-10', 'parser', 'link-1');">parser</a></tt><tt class="py-op">)</tt> </tt>
+<a name="L66"></a><tt class="py-lineno"> 66</tt>  <tt class="py-line">        <tt class="py-name">root</tt> <tt class="py-op">=</tt> <tt class="py-name">tree</tt><tt class="py-op">.</tt><tt class="py-name">getroot</tt><tt class="py-op">(</tt><tt class="py-op">)</tt> </tt>
+<a name="L67"></a><tt class="py-lineno"> 67</tt>  <tt class="py-line">        <tt class="py-name">univ</tt><tt class="py-op">=</tt><tt class="py-name">open</tt><tt class="py-op">(</tt><tt class="py-string">"univers.txt"</tt><tt class="py-op">,</tt><tt class="py-string">"w"</tt><tt class="py-op">)</tt> </tt>
+<a name="L68"></a><tt class="py-lineno"> 68</tt>  <tt class="py-line">        <tt class="py-comment">###XML Parsing from root: end</tt> </tt>
+<a name="L69"></a><tt class="py-lineno"> 69</tt>  <tt class="py-line">        <tt class="py-name">variants</tt> <tt class="py-op">=</tt> <tt class="py-name">root</tt><tt class="py-op">.</tt><tt class="py-name">findall</tt><tt class="py-op">(</tt><tt class="py-string">'NODE/COMPARISON/VARIANTS/VARIANT'</tt><tt class="py-op">)</tt> </tt>
+<a name="L70"></a><tt class="py-lineno"> 70</tt>  <tt class="py-line">        <tt class="py-name">dicoPos</tt> <tt class="py-op">=</tt> <tt class="py-op">{</tt><tt class="py-op">}</tt> </tt>
+<a name="L71"></a><tt class="py-lineno"> 71</tt>  <tt class="py-line"> </tt>
+<a name="L72"></a><tt class="py-lineno"> 72</tt>  <tt class="py-line">        <tt class="py-keyword">for</tt> <tt class="py-name">variant</tt> <tt class="py-keyword">in</tt> <tt class="py-name">variants</tt> <tt class="py-op">:</tt> </tt>
+<a name="L73"></a><tt class="py-lineno"> 73</tt>  <tt class="py-line"> </tt>
+<a name="L74"></a><tt class="py-lineno"> 74</tt>  <tt class="py-line">                <tt class="py-name">position</tt> <tt class="py-op">=</tt> <tt class="py-name">int</tt><tt class="py-op">(</tt><tt class="py-name">variant</tt><tt class="py-op">.</tt><tt class="py-name">find</tt><tt class="py-op">(</tt><tt class="py-string">"POSITION"</tt><tt class="py-op">)</tt><tt class="py-op">.</tt><tt class="py-name">text</tt><tt class="py-op">)</tt> </tt>
+<a name="L75"></a><tt class="py-lineno"> 75</tt>  <tt class="py-line"> </tt>
+<a name="L76"></a><tt class="py-lineno"> 76</tt>  <tt class="py-line">                <tt class="py-keyword">if</tt> <tt class="py-name">position</tt> <tt class="py-keyword">not</tt> <tt class="py-keyword">in</tt> <tt class="py-name">dicoPos</tt><tt class="py-op">.</tt><tt class="py-name">keys</tt><tt class="py-op">(</tt><tt class="py-op">)</tt> <tt class="py-op">:</tt> </tt>
+<a name="L77"></a><tt class="py-lineno"> 77</tt>  <tt class="py-line">                        <tt class="py-name">dicoPos</tt><tt class="py-op">[</tt><tt class="py-name">position</tt><tt class="py-op">]</tt> <tt class="py-op">=</tt> <tt class="py-op">[</tt><tt class="py-op">]</tt> </tt>
+<a name="L78"></a><tt class="py-lineno"> 78</tt>  <tt class="py-line">                        <tt class="py-name">GOs</tt> <tt class="py-op">=</tt> <tt class="py-name">variant</tt><tt class="py-op">.</tt><tt class="py-name">findall</tt><tt class="py-op">(</tt><tt class="py-string">"REGION/GOLIST/GO/ID"</tt><tt class="py-op">)</tt> </tt>
+<a name="L79"></a><tt class="py-lineno"> 79</tt>  <tt class="py-line"> </tt>
+<a name="L80"></a><tt class="py-lineno"> 80</tt>  <tt class="py-line">                        <tt class="py-keyword">for</tt> <tt class="py-name">GO</tt> <tt class="py-keyword">in</tt> <tt class="py-name">GOs</tt> <tt class="py-op">:</tt> </tt>
+<a name="L81"></a><tt class="py-lineno"> 81</tt>  <tt class="py-line"> </tt>
+<a name="L82"></a><tt class="py-lineno"> 82</tt>  <tt class="py-line">                                <tt class="py-name">dicoPos</tt><tt class="py-op">[</tt><tt class="py-name">position</tt><tt class="py-op">]</tt><tt class="py-op">.</tt><tt class="py-name">append</tt><tt class="py-op">(</tt><tt class="py-name">GO</tt><tt class="py-op">.</tt><tt class="py-name">text</tt><tt class="py-op">)</tt> </tt>
+<a name="L83"></a><tt class="py-lineno"> 83</tt>  <tt class="py-line">                                <tt class="py-keyword">if</tt> <tt class="py-name">str</tt><tt class="py-op">(</tt><tt class="py-name">GO</tt><tt class="py-op">.</tt><tt class="py-name">text</tt><tt class="py-op">)</tt> <tt class="py-op">!=</tt> <tt class="py-string">""</tt><tt class="py-op">:</tt> </tt>
+<a name="L84"></a><tt class="py-lineno"> 84</tt>  <tt class="py-line">                                        <tt class="py-keyword">if</tt> <tt class="py-name">str</tt><tt class="py-op">(</tt><tt class="py-name">GO</tt><tt class="py-op">.</tt><tt class="py-name">text</tt><tt class="py-op">)</tt> <tt class="py-op">!=</tt> <tt class="py-string">"[]"</tt><tt class="py-op">:</tt> </tt>
+<a name="L85"></a><tt class="py-lineno"> 85</tt>  <tt class="py-line">                                                <tt class="py-name">univ</tt><tt class="py-op">.</tt><tt class="py-name">write</tt><tt class="py-op">(</tt><tt class="py-name">str</tt><tt class="py-op">(</tt><tt class="py-name">GO</tt><tt class="py-op">.</tt><tt class="py-name">text</tt><tt class="py-op">)</tt><tt class="py-op">.</tt><tt class="py-name">replace</tt><tt class="py-op">(</tt><tt class="py-string">"['"</tt><tt class="py-op">,</tt><tt class="py-string">""</tt><tt class="py-op">)</tt><tt class="py-op">+</tt><tt class="py-string">'\n'</tt><tt class="py-op">)</tt> </tt>
+</div><a name="L86"></a><tt class="py-lineno"> 86</tt>  <tt class="py-line"> </tt>
+<a name="L87"></a><tt class="py-lineno"> 87</tt>  <tt class="py-line"> </tt>
+<a name="everygo"></a><div id="everygo-def"><a name="L88"></a><tt class="py-lineno"> 88</tt> <a class="py-toggle" href="#" id="everygo-toggle" onclick="return toggle('everygo');">-</a><tt class="py-line"><tt class="py-keyword">def</tt> <a class="py-def-name" href="EveryGO-module.html#everygo">everygo</a><tt class="py-op">(</tt><tt class="py-param">compvalues</tt><tt class="py-op">,</tt><tt class="py-param">view</tt><tt class="py-op">,</tt><tt class="py-param">xmlname</tt><tt class="py-op">,</tt><tt class="py-param">Rpath</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+</div><div id="everygo-collapsed" style="display:none;" pad="+++" indent="++++"></div><div id="everygo-expanded"><a name="L89"></a><tt class="py-lineno"> 89</tt>  <tt class="py-line">        <tt class="py-docstring">"""</tt> </tt>
+<a name="L90"></a><tt class="py-lineno"> 90</tt>  <tt class="py-line"><tt class="py-docstring">        Make enrichment analysis for each comparison values</tt> </tt>
+<a name="L91"></a><tt class="py-lineno"> 91</tt>  <tt class="py-line"><tt class="py-docstring">        @param compvalues: comparisons values returned by getcomp() </tt> </tt>
+<a name="L92"></a><tt class="py-lineno"> 92</tt>  <tt class="py-line"><tt class="py-docstring">        @type compvalues: string</tt> </tt>
+<a name="L93"></a><tt class="py-lineno"> 93</tt>  <tt class="py-line"><tt class="py-docstring">        @param view: -view argument --&gt; if view != 0 , graphical representation of enrichment will be processed</tt> </tt>
+<a name="L94"></a><tt class="py-lineno"> 94</tt>  <tt class="py-line"><tt class="py-docstring">        @type view: int</tt> </tt>
+<a name="L95"></a><tt class="py-lineno"> 95</tt>  <tt class="py-line"><tt class="py-docstring">        @param xmlname: the xml filename</tt> </tt>
+<a name="L96"></a><tt class="py-lineno"> 96</tt>  <tt class="py-line"><tt class="py-docstring">        @type xmlname: string</tt> </tt>
+<a name="L97"></a><tt class="py-lineno"> 97</tt>  <tt class="py-line"><tt class="py-docstring">        """</tt> </tt>
+<a name="L98"></a><tt class="py-lineno"> 98</tt>  <tt class="py-line"> </tt>
+<a name="L99"></a><tt class="py-lineno"> 99</tt>  <tt class="py-line">        <tt class="py-keyword">print</tt> <tt class="py-string">'GO-terms retrieving for each comparison submitted'</tt> </tt>
+<a name="L100"></a><tt class="py-lineno">100</tt>  <tt class="py-line">        <tt class="py-comment">###XML Parsing from root: start</tt> </tt>
+<a name="L101"></a><tt class="py-lineno">101</tt>  <tt class="py-line">        <tt id="link-11" class="py-name"><a title="GOtrimmer.parser" class="py-name" href="#" onclick="return doclink('link-11', 'parser', 'link-1');">parser</a></tt> <tt class="py-op">=</tt> <tt class="py-name">etree</tt><tt class="py-op">.</tt><tt class="py-name">XMLParser</tt><tt class="py-op">(</tt><tt class="py-name">remove_blank_text</tt><tt class="py-op">=</tt><tt class="py-name">True</tt><tt class="py-op">)</tt> </tt>
+<a name="L102"></a><tt class="py-lineno">102</tt>  <tt class="py-line">        <tt class="py-name">tree</tt> <tt class="py-op">=</tt> <tt class="py-name">etree</tt><tt class="py-op">.</tt><tt class="py-name">ElementTree</tt><tt class="py-op">(</tt><tt class="py-op">)</tt> </tt>
+<a name="L103"></a><tt class="py-lineno">103</tt>  <tt class="py-line">        <tt class="py-name">tree</tt> <tt class="py-op">=</tt><tt class="py-name">etree</tt><tt class="py-op">.</tt><tt class="py-name">parse</tt><tt class="py-op">(</tt><tt class="py-name">xmlname</tt><tt class="py-op">,</tt><tt id="link-12" class="py-name"><a title="GOtrimmer.parser" class="py-name" href="#" onclick="return doclink('link-12', 'parser', 'link-1');">parser</a></tt><tt class="py-op">)</tt> </tt>
+<a name="L104"></a><tt class="py-lineno">104</tt>  <tt class="py-line">        <tt class="py-name">root</tt> <tt class="py-op">=</tt> <tt class="py-name">tree</tt><tt class="py-op">.</tt><tt class="py-name">getroot</tt><tt class="py-op">(</tt><tt class="py-op">)</tt> </tt>
+<a name="L105"></a><tt class="py-lineno">105</tt>  <tt class="py-line">        <tt class="py-name">i</tt><tt class="py-op">=</tt><tt class="py-number">1</tt> </tt>
+<a name="L106"></a><tt class="py-lineno">106</tt>  <tt class="py-line">        <tt class="py-comment">###XML Parsing from root: end</tt> </tt>
+<a name="L107"></a><tt class="py-lineno">107</tt>  <tt class="py-line"> </tt>
+<a name="L108"></a><tt class="py-lineno">108</tt>  <tt class="py-line">        <tt class="py-comment">#Analyse &lt;COMPARISON&gt; field values</tt> </tt>
+<a name="L109"></a><tt class="py-lineno">109</tt>  <tt class="py-line">        <tt class="py-name">comparisonsfield</tt><tt class="py-op">=</tt><tt class="py-name">tree</tt><tt class="py-op">.</tt><tt class="py-name">xpath</tt><tt class="py-op">(</tt><tt class="py-string">"NODE/COMPARISON"</tt><tt class="py-op">)</tt> </tt>
+<a name="L110"></a><tt class="py-lineno">110</tt>  <tt class="py-line"> </tt>
+<a name="L111"></a><tt class="py-lineno">111</tt>  <tt class="py-line">        <tt class="py-comment">#For each comparison values (in Arguments -comp),create a specific path if dont exists and collect go-terms (more details below)</tt> </tt>
+<a name="L112"></a><tt class="py-lineno">112</tt>  <tt class="py-line">        <tt class="py-keyword">for</tt> <tt class="py-name">numxml</tt> <tt class="py-keyword">in</tt> <tt class="py-name">compvalues</tt><tt class="py-op">:</tt> </tt>
+<a name="L113"></a><tt class="py-lineno">113</tt>  <tt class="py-line">                <tt class="py-name">goechlist</tt><tt class="py-op">=</tt><tt class="py-op">[</tt><tt class="py-op">]</tt>            <tt class="py-comment">#goechlist=list of non-enriched GO-terms from comparison x</tt> </tt>
+<a name="L114"></a><tt class="py-lineno">114</tt>  <tt class="py-line">                <tt class="py-name">num</tt><tt class="py-op">=</tt><tt class="py-name">int</tt><tt class="py-op">(</tt><tt class="py-name">numxml</tt><tt class="py-op">)</tt><tt class="py-op">-</tt><tt class="py-number">1</tt>       <tt class="py-comment">#numxl=comparison number in xml(the x of comparison value="x"),start from 1</tt> </tt>
+<a name="L115"></a><tt class="py-lineno">115</tt>  <tt class="py-line">                                                        <tt class="py-comment">#num=comparison number indice in the list num. num starts from 0 , so num=numxml-1</tt> </tt>
+<a name="L116"></a><tt class="py-lineno">116</tt>  <tt class="py-line"> </tt>
+<a name="L117"></a><tt class="py-lineno">117</tt>  <tt class="py-line">                <tt class="py-comment">#Create a path specific for &lt;COMPARISON Value&gt;</tt> </tt>
+<a name="L118"></a><tt class="py-lineno">118</tt>  <tt class="py-line">                <tt class="py-keyword">if</tt> <tt class="py-keyword">not</tt> <tt class="py-name">os</tt><tt class="py-op">.</tt><tt class="py-name">path</tt><tt class="py-op">.</tt><tt class="py-name">exists</tt><tt class="py-op">(</tt><tt class="py-name">str</tt><tt class="py-op">(</tt><tt class="py-name">numxml</tt><tt class="py-op">)</tt><tt class="py-op">+</tt><tt class="py-string">"/"</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+<a name="L119"></a><tt class="py-lineno">119</tt>  <tt class="py-line">                        <tt class="py-name">os</tt><tt class="py-op">.</tt><tt class="py-name">mkdir</tt><tt class="py-op">(</tt><tt class="py-name">str</tt><tt class="py-op">(</tt><tt class="py-name">numxml</tt><tt class="py-op">)</tt><tt class="py-op">)</tt> </tt>
+<a name="L120"></a><tt class="py-lineno">120</tt>  <tt class="py-line">                 </tt>
+<a name="L121"></a><tt class="py-lineno">121</tt>  <tt class="py-line">                <tt class="py-comment">#Collect GO-terms from &lt;COMPARISON Value&gt; XML and export GO-terms file in the specific &lt;COMPARISON Value&gt; path</tt> </tt>
+<a name="L122"></a><tt class="py-lineno">122</tt>  <tt class="py-line">                <tt class="py-name">GOfile</tt> <tt class="py-op">=</tt> <tt class="py-name">open</tt><tt class="py-op">(</tt><tt class="py-name">str</tt><tt class="py-op">(</tt><tt class="py-name">numxml</tt><tt class="py-op">)</tt><tt class="py-op">+</tt><tt class="py-string">"/go_ech.txt"</tt><tt class="py-op">,</tt> <tt class="py-string">"w"</tt><tt class="py-op">)</tt> </tt>
+<a name="L123"></a><tt class="py-lineno">123</tt>  <tt class="py-line"> </tt>
+<a name="L124"></a><tt class="py-lineno">124</tt>  <tt class="py-line">                <tt class="py-keyword">for</tt> <tt class="py-name">comparisonfield</tt> <tt class="py-keyword">in</tt> <tt class="py-name">comparisonsfield</tt><tt class="py-op">[</tt><tt class="py-name">num</tt><tt class="py-op">]</tt><tt class="py-op">:</tt> </tt>
+<a name="L125"></a><tt class="py-lineno">125</tt>  <tt class="py-line"> </tt>
+<a name="L126"></a><tt class="py-lineno">126</tt>  <tt class="py-line">                        <tt class="py-keyword">if</tt> <tt class="py-string">"GO:"</tt> <tt class="py-keyword">in</tt> <tt class="py-name">etree</tt><tt class="py-op">.</tt><tt class="py-name">tostring</tt><tt class="py-op">(</tt><tt class="py-name">comparisonfield</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+<a name="L127"></a><tt class="py-lineno">127</tt>  <tt class="py-line"> </tt>
+<a name="L128"></a><tt class="py-lineno">128</tt>  <tt class="py-line">                                <tt class="py-name">go_ids</tt><tt class="py-op">=</tt><tt class="py-name">comparisonfield</tt><tt class="py-op">.</tt><tt class="py-name">findall</tt><tt class="py-op">(</tt><tt class="py-string">"VARIANT/REGION/GOLIST/GO/ID"</tt><tt class="py-op">)</tt> <tt class="py-comment">#find all GO:ID from &lt;ID&gt;&lt;/ID&gt;</tt> </tt>
+<a name="L129"></a><tt class="py-lineno">129</tt>  <tt class="py-line"> </tt>
+<a name="L130"></a><tt class="py-lineno">130</tt>  <tt class="py-line">                                <tt class="py-keyword">for</tt> <tt class="py-name">go_id</tt> <tt class="py-keyword">in</tt> <tt class="py-name">go_ids</tt><tt class="py-op">:</tt> </tt>
+<a name="L131"></a><tt class="py-lineno">131</tt>  <tt class="py-line">                                        <tt class="py-name">go_id</tt><tt class="py-op">=</tt><tt class="py-op">(</tt><tt class="py-name">go_id</tt><tt class="py-op">.</tt><tt class="py-name">text</tt><tt class="py-op">)</tt><tt class="py-op">.</tt><tt class="py-name">replace</tt><tt class="py-op">(</tt><tt class="py-string">'["'</tt><tt class="py-op">,</tt><tt class="py-string">""</tt><tt class="py-op">)</tt> <tt class="py-comment">#In order to have a nice output if some GO:ID was not parsed correctly (fixed, but I'm superstitious :) )</tt> </tt>
+<a name="L132"></a><tt class="py-lineno">132</tt>  <tt class="py-line">                                        <tt class="py-name">goechlist</tt><tt class="py-op">.</tt><tt class="py-name">append</tt><tt class="py-op">(</tt><tt class="py-name">go_id</tt><tt class="py-op">)</tt> </tt>
+<a name="L133"></a><tt class="py-lineno">133</tt>  <tt class="py-line"> </tt>
+<a name="L134"></a><tt class="py-lineno">134</tt>  <tt class="py-line">                <tt class="py-keyword">for</tt> <tt class="py-name">goid</tt> <tt class="py-keyword">in</tt> <tt class="py-name">goechlist</tt><tt class="py-op">:</tt> </tt>
+<a name="L135"></a><tt class="py-lineno">135</tt>  <tt class="py-line">                        <tt class="py-name">GOfile</tt><tt class="py-op">.</tt><tt class="py-name">write</tt><tt class="py-op">(</tt><tt class="py-name">str</tt><tt class="py-op">(</tt><tt class="py-name">goid</tt><tt class="py-op">)</tt><tt class="py-op">+</tt><tt class="py-string">'\n'</tt><tt class="py-op">)</tt> </tt>
+<a name="L136"></a><tt class="py-lineno">136</tt>  <tt class="py-line">                <tt class="py-name">GOfile</tt><tt class="py-op">.</tt><tt class="py-name">close</tt><tt class="py-op">(</tt><tt class="py-op">)</tt> </tt>
+<a name="L137"></a><tt class="py-lineno">137</tt>  <tt class="py-line"> </tt>
+<a name="L138"></a><tt class="py-lineno">138</tt>  <tt class="py-line">                <tt class="py-comment">#GO ENRICHMENT ANALYSYS for &lt;COMPARISON Value&gt; : Call GOwalker and Goview</tt> </tt>
+<a name="L139"></a><tt class="py-lineno">139</tt>  <tt class="py-line"> </tt>
+<a name="L140"></a><tt class="py-lineno">140</tt>  <tt class="py-line">                <tt class="py-keyword">if</tt> <tt class="py-name">Rpath</tt><tt class="py-op">[</tt><tt class="py-op">-</tt><tt class="py-number">1</tt><tt class="py-op">]</tt> <tt class="py-op">!=</tt> <tt class="py-string">'/'</tt><tt class="py-op">:</tt> </tt>
+<a name="L141"></a><tt class="py-lineno">141</tt>  <tt class="py-line">                         <tt class="py-name">Rpath</tt> <tt class="py-op">=</tt>  <tt class="py-name">Rpath</tt> <tt class="py-op">+</tt> <tt class="py-string">'/'</tt> </tt>
+<a name="L142"></a><tt class="py-lineno">142</tt>  <tt class="py-line"> </tt>
+<a name="L143"></a><tt class="py-lineno">143</tt>  <tt class="py-line">                <tt class="py-keyword">print</tt> <tt class="py-string">'GO-terms enrichment Analysis for &lt;COMPARISON value="'</tt><tt class="py-op">+</tt><tt class="py-name">str</tt><tt class="py-op">(</tt><tt class="py-name">numxml</tt><tt class="py-op">)</tt><tt class="py-op">+</tt><tt class="py-string">'"&gt;'</tt> </tt>
+<a name="L144"></a><tt class="py-lineno">144</tt>  <tt class="py-line">                <tt class="py-name">os</tt><tt class="py-op">.</tt><tt class="py-name">system</tt><tt class="py-op">(</tt><tt class="py-string">"R --vanilla --slave --args "</tt><tt class="py-op">+</tt><tt class="py-string">" "</tt><tt class="py-op">+</tt> <tt class="py-name">str</tt><tt class="py-op">(</tt><tt class="py-name">numxml</tt><tt class="py-op">)</tt><tt class="py-op">+</tt><tt class="py-string">" /go_ech.txt "</tt><tt class="py-op">+</tt> <tt class="py-name">str</tt><tt class="py-op">(</tt><tt class="py-name">numxml</tt><tt class="py-op">)</tt> <tt class="py-op">+</tt> <tt class="py-string">" &lt; "</tt> <tt class="py-op">+</tt> <tt class="py-name">Rpath</tt> <tt class="py-op">+</tt> <tt class="py-string">"GoWalker"</tt><tt class="py-op">)</tt> </tt>
+<a name="L145"></a><tt class="py-lineno">145</tt>  <tt class="py-line"> </tt>
+<a name="L146"></a><tt class="py-lineno">146</tt>  <tt class="py-line">                <tt class="py-comment">#cleaning Gowalker temporary output (hyperesults.txt)</tt> </tt>
+<a name="L147"></a><tt class="py-lineno">147</tt>  <tt class="py-line">                <tt class="py-name">os</tt><tt class="py-op">.</tt><tt class="py-name">system</tt><tt class="py-op">(</tt><tt class="py-string">'cat '</tt><tt class="py-op">+</tt><tt class="py-name">str</tt><tt class="py-op">(</tt><tt class="py-name">numxml</tt><tt class="py-op">)</tt><tt class="py-op">+</tt><tt class="py-string">'/hyperesults_bp.txt | awk \'{print $0 ";BP"}\' &gt; '</tt><tt class="py-op">+</tt><tt class="py-name">str</tt><tt class="py-op">(</tt><tt class="py-name">numxml</tt><tt class="py-op">)</tt><tt class="py-op">+</tt><tt class="py-string">'/hyperesults.txt'</tt><tt class="py-op">)</tt> <tt class="py-comment"># add Aspect tag</tt> </tt>
+<a name="L148"></a><tt class="py-lineno">148</tt>  <tt class="py-line">                <tt class="py-name">os</tt><tt class="py-op">.</tt><tt class="py-name">system</tt><tt class="py-op">(</tt><tt class="py-string">'cat '</tt><tt class="py-op">+</tt><tt class="py-name">str</tt><tt class="py-op">(</tt><tt class="py-name">numxml</tt><tt class="py-op">)</tt><tt class="py-op">+</tt><tt class="py-string">'/hyperesults_mf.txt | awk \'{print $0 ";MF"}\' &gt;&gt; '</tt><tt class="py-op">+</tt><tt class="py-name">str</tt><tt class="py-op">(</tt><tt class="py-name">numxml</tt><tt class="py-op">)</tt><tt class="py-op">+</tt><tt class="py-string">'/hyperesults.txt'</tt><tt class="py-op">)</tt> </tt>
+<a name="L149"></a><tt class="py-lineno">149</tt>  <tt class="py-line">                <tt class="py-name">os</tt><tt class="py-op">.</tt><tt class="py-name">system</tt><tt class="py-op">(</tt><tt class="py-string">'cat '</tt><tt class="py-op">+</tt><tt class="py-name">str</tt><tt class="py-op">(</tt><tt class="py-name">numxml</tt><tt class="py-op">)</tt><tt class="py-op">+</tt><tt class="py-string">'/hyperesults_cc.txt | awk \'{print $0 ";CC"}\' &gt;&gt; '</tt><tt class="py-op">+</tt><tt class="py-name">str</tt><tt class="py-op">(</tt><tt class="py-name">numxml</tt><tt class="py-op">)</tt><tt class="py-op">+</tt><tt class="py-string">'/hyperesults.txt'</tt><tt class="py-op">)</tt> </tt>
+<a name="L150"></a><tt class="py-lineno">150</tt>  <tt class="py-line">                <tt class="py-name">os</tt><tt class="py-op">.</tt><tt class="py-name">system</tt><tt class="py-op">(</tt><tt class="py-string">'sed -i \'0,/BP/s//Aspect/\' '</tt><tt class="py-op">+</tt><tt class="py-name">str</tt><tt class="py-op">(</tt><tt class="py-name">numxml</tt><tt class="py-op">)</tt><tt class="py-op">+</tt><tt class="py-string">'hyperesults.txt'</tt><tt class="py-op">)</tt> <tt class="py-comment"># Correcting header name</tt> </tt>
+<a name="L151"></a><tt class="py-lineno">151</tt>  <tt class="py-line">                <tt class="py-name">os</tt><tt class="py-op">.</tt><tt class="py-name">system</tt><tt class="py-op">(</tt><tt class="py-string">'sed -i \'0,/CC/s//Aspect/\' '</tt><tt class="py-op">+</tt><tt class="py-name">str</tt><tt class="py-op">(</tt><tt class="py-name">numxml</tt><tt class="py-op">)</tt><tt class="py-op">+</tt><tt class="py-string">'hyperesults.txt'</tt><tt class="py-op">)</tt> </tt>
+<a name="L152"></a><tt class="py-lineno">152</tt>  <tt class="py-line">                <tt class="py-name">os</tt><tt class="py-op">.</tt><tt class="py-name">system</tt><tt class="py-op">(</tt><tt class="py-string">'sed -i \'0,/MF/s//Aspect/\' '</tt><tt class="py-op">+</tt><tt class="py-name">str</tt><tt class="py-op">(</tt><tt class="py-name">numxml</tt><tt class="py-op">)</tt><tt class="py-op">+</tt><tt class="py-string">'hyperesults.txt'</tt><tt class="py-op">)</tt> </tt>
+<a name="L153"></a><tt class="py-lineno">153</tt>  <tt class="py-line">                <tt class="py-name">os</tt><tt class="py-op">.</tt><tt class="py-name">system</tt><tt class="py-op">(</tt><tt class="py-string">'sort -r '</tt><tt class="py-op">+</tt><tt class="py-name">str</tt><tt class="py-op">(</tt><tt class="py-name">numxml</tt><tt class="py-op">)</tt><tt class="py-op">+</tt><tt class="py-string">'/hyperesults.txt'</tt><tt class="py-op">)</tt> <tt class="py-comment"># keep one header</tt> </tt>
+<a name="L154"></a><tt class="py-lineno">154</tt>  <tt class="py-line">                <tt class="py-name">os</tt><tt class="py-op">.</tt><tt class="py-name">system</tt><tt class="py-op">(</tt><tt class="py-string">'sed 1d '</tt><tt class="py-op">+</tt><tt class="py-name">str</tt><tt class="py-op">(</tt><tt class="py-name">numxml</tt><tt class="py-op">)</tt><tt class="py-op">+</tt><tt class="py-string">'/hyperesults.txt -i'</tt><tt class="py-op">)</tt> </tt>
+<a name="L155"></a><tt class="py-lineno">155</tt>  <tt class="py-line">                <tt class="py-name">os</tt><tt class="py-op">.</tt><tt class="py-name">system</tt><tt class="py-op">(</tt><tt class="py-string">'sed 1d '</tt><tt class="py-op">+</tt><tt class="py-name">str</tt><tt class="py-op">(</tt><tt class="py-name">numxml</tt><tt class="py-op">)</tt><tt class="py-op">+</tt><tt class="py-string">'/hyperesults.txt -i'</tt><tt class="py-op">)</tt> </tt>
+<a name="L156"></a><tt class="py-lineno">156</tt>  <tt class="py-line">                <tt class="py-comment">#add GO ASPECT INFO for Goview (Enrichment_analysis_results.txt)</tt> </tt>
+<a name="L157"></a><tt class="py-lineno">157</tt>  <tt class="py-line">                <tt class="py-name">os</tt><tt class="py-op">.</tt><tt class="py-name">system</tt><tt class="py-op">(</tt><tt class="py-string">'cut -d ";" -s -f 4,5 '</tt><tt class="py-op">+</tt><tt class="py-name">str</tt><tt class="py-op">(</tt><tt class="py-name">numxml</tt><tt class="py-op">)</tt><tt class="py-op">+</tt><tt class="py-string">'/hyperesults_bp.txt | awk \'{print $0 ";BP"}\' &gt; '</tt><tt class="py-op">+</tt><tt class="py-name">str</tt><tt class="py-op">(</tt><tt class="py-name">numxml</tt><tt class="py-op">)</tt><tt class="py-op">+</tt><tt class="py-string">'/hyperesults_all.txt'</tt><tt class="py-op">)</tt> </tt>
+<a name="L158"></a><tt class="py-lineno">158</tt>  <tt class="py-line">                <tt class="py-name">os</tt><tt class="py-op">.</tt><tt class="py-name">system</tt><tt class="py-op">(</tt><tt class="py-string">'cut -d ";" -s -f 4,5 '</tt><tt class="py-op">+</tt><tt class="py-name">str</tt><tt class="py-op">(</tt><tt class="py-name">numxml</tt><tt class="py-op">)</tt><tt class="py-op">+</tt><tt class="py-string">'/hyperesults_mf.txt | awk \'{print $0 ";MF"}\' &gt;&gt; '</tt><tt class="py-op">+</tt><tt class="py-name">str</tt><tt class="py-op">(</tt><tt class="py-name">numxml</tt><tt class="py-op">)</tt><tt class="py-op">+</tt><tt class="py-string">'/hyperesults_all.txt'</tt><tt class="py-op">)</tt> </tt>
+<a name="L159"></a><tt class="py-lineno">159</tt>  <tt class="py-line">                <tt class="py-name">os</tt><tt class="py-op">.</tt><tt class="py-name">system</tt><tt class="py-op">(</tt><tt class="py-string">'cut -d ";" -s -f 4,5 '</tt><tt class="py-op">+</tt><tt class="py-name">str</tt><tt class="py-op">(</tt><tt class="py-name">numxml</tt><tt class="py-op">)</tt><tt class="py-op">+</tt><tt class="py-string">'/hyperesults_cc.txt | awk \'{print $0 ";CC"}\' &gt;&gt; '</tt><tt class="py-op">+</tt><tt class="py-name">str</tt><tt class="py-op">(</tt><tt class="py-name">numxml</tt><tt class="py-op">)</tt><tt class="py-op">+</tt><tt class="py-string">'/hyperesults_all.txt'</tt><tt class="py-op">)</tt> </tt>
+<a name="L160"></a><tt class="py-lineno">160</tt>  <tt class="py-line">                <tt class="py-name">os</tt><tt class="py-op">.</tt><tt class="py-name">system</tt><tt class="py-op">(</tt><tt class="py-string">"sort -r "</tt><tt class="py-op">+</tt><tt class="py-name">str</tt><tt class="py-op">(</tt><tt class="py-name">numxml</tt><tt class="py-op">)</tt><tt class="py-op">+</tt><tt class="py-string">"/hyperesults_all.txt | uniq | sed '1d'| sed '1d' | sed '1d' &gt; "</tt><tt class="py-op">+</tt><tt class="py-name">str</tt><tt class="py-op">(</tt><tt class="py-name">numxml</tt><tt class="py-op">)</tt><tt class="py-op">+</tt><tt class="py-string">"/hyperesults_all_final.txt"</tt><tt class="py-op">)</tt> <tt class="py-comment">#keep one header</tt> </tt>
+<a name="L161"></a><tt class="py-lineno">161</tt>  <tt class="py-line">                <tt class="py-name">os</tt><tt class="py-op">.</tt><tt class="py-name">system</tt><tt class="py-op">(</tt><tt class="py-string">"sed -i '1i Golevel;Pvalue;Aspect' "</tt><tt class="py-op">+</tt><tt class="py-name">str</tt><tt class="py-op">(</tt><tt class="py-name">numxml</tt><tt class="py-op">)</tt><tt class="py-op">+</tt><tt class="py-string">"/hyperesults_all_final.txt"</tt><tt class="py-op">)</tt>  </tt>
+<a name="L162"></a><tt class="py-lineno">162</tt>  <tt class="py-line">                <tt class="py-name">os</tt><tt class="py-op">.</tt><tt class="py-name">system</tt><tt class="py-op">(</tt><tt class="py-string">"cat "</tt><tt class="py-op">+</tt><tt class="py-name">str</tt><tt class="py-op">(</tt><tt class="py-name">numxml</tt><tt class="py-op">)</tt><tt class="py-op">+</tt><tt class="py-string">"/hyperesults_all_final.txt | tr '\"' '0' &gt; "</tt><tt class="py-op">+</tt><tt class="py-name">str</tt><tt class="py-op">(</tt><tt class="py-name">numxml</tt><tt class="py-op">)</tt><tt class="py-op">+</tt><tt class="py-string">"/Enrichment_analysis_results.txt"</tt><tt class="py-op">)</tt> <tt class="py-comment">#cleaning output</tt> </tt>
+<a name="L163"></a><tt class="py-lineno">163</tt>  <tt class="py-line"> </tt>
+<a name="L164"></a><tt class="py-lineno">164</tt>  <tt class="py-line">                <tt class="py-comment">#OPTIONNAL GRAPHICAL REPRESENTATION</tt> </tt>
+<a name="L165"></a><tt class="py-lineno">165</tt>  <tt class="py-line">                <tt class="py-keyword">if</tt> <tt class="py-name">view</tt><tt class="py-op">:</tt> </tt>
+<a name="L166"></a><tt class="py-lineno">166</tt>  <tt class="py-line">                        <tt class="py-keyword">print</tt> <tt class="py-string">"Generating grahical representation"</tt> </tt>
+<a name="L167"></a><tt class="py-lineno">167</tt>  <tt class="py-line">                        <tt class="py-name">os</tt><tt class="py-op">.</tt><tt class="py-name">system</tt><tt class="py-op">(</tt><tt class="py-string">"R --vanilla --slave --args "</tt><tt class="py-op">+</tt><tt class="py-string">" "</tt><tt class="py-op">+</tt> <tt class="py-name">str</tt><tt class="py-op">(</tt><tt class="py-name">numxml</tt><tt class="py-op">)</tt><tt class="py-op">+</tt><tt class="py-string">" &lt; "</tt> <tt class="py-op">+</tt> <tt class="py-name">Rpath</tt> <tt class="py-op">+</tt> <tt class="py-string">"GoView"</tt><tt class="py-op">)</tt> </tt>
+</div><a name="L168"></a><tt class="py-lineno">168</tt>  <tt class="py-line"> </tt>
+<a name="L169"></a><tt class="py-lineno">169</tt>  <tt class="py-line">                <tt class="py-comment">#remove temporary files</tt> </tt>
+<a name="L170"></a><tt class="py-lineno">170</tt>  <tt class="py-line">                <tt class="py-comment">#os.system('rm '+str(numxml)+'/hyperesults_* '+str(numxml)+'/go* '+str(numxml)+'/Enrichment_analysis_results.txt')</tt> </tt>
+<a name="L171"></a><tt class="py-lineno">171</tt>  <tt class="py-line"> </tt>
+<a name="L172"></a><tt class="py-lineno">172</tt>  <tt class="py-line">                <tt class="py-comment">#FINAL OUTPUT:  For GoWalker --&gt; str(numxml)/Enrichment_analysis_results.txt (tabulated text)</tt> </tt>
+<a name="L173"></a><tt class="py-lineno">173</tt>  <tt class="py-line">                <tt class="py-comment">#                               For GoView --&gt; str(numxml)/GO_distribution.pdf</tt> </tt>
+<a name="L174"></a><tt class="py-lineno">174</tt>  <tt class="py-line"> </tt>
+<a name="L175"></a><tt class="py-lineno">175</tt>  <tt class="py-line">                                                                                                                                                                                                                 </tt>
+<a name="L176"></a><tt class="py-lineno">176</tt>  <tt class="py-line">                 </tt>
+<a name="L177"></a><tt class="py-lineno">177</tt>  <tt class="py-line"><tt class="py-comment">#######################################################################################################################</tt> </tt>
+<a name="L178"></a><tt class="py-lineno">178</tt>  <tt class="py-line"><tt class="py-comment">#MAIN##################################################################################################################</tt> </tt>
+<a name="L179"></a><tt class="py-lineno">179</tt>  <tt class="py-line"><tt class="py-comment">#######################################################################################################################</tt> </tt>
+<a name="L180"></a><tt class="py-lineno">180</tt>  <tt class="py-line"> </tt>
+<a name="main"></a><div id="main-def"><a name="L181"></a><tt class="py-lineno">181</tt> <a class="py-toggle" href="#" id="main-toggle" onclick="return toggle('main');">-</a><tt class="py-line"><tt class="py-keyword">def</tt> <a class="py-def-name" href="EveryGO-module.html#main">main</a><tt class="py-op">(</tt><tt class="py-op">)</tt><tt class="py-op">:</tt>      </tt>
+</div><a name="L182"></a><tt class="py-lineno">182</tt>  <tt class="py-line">         </tt>
+<a name="L183"></a><tt class="py-lineno">183</tt>  <tt class="py-line">        <tt class="py-comment">##################### get parser ###############################</tt> </tt>
+<a name="L184"></a><tt class="py-lineno">184</tt>  <tt class="py-line">        <tt id="link-13" class="py-name"><a title="GOtrimmer.parser" class="py-name" href="#" onclick="return doclink('link-13', 'parser', 'link-1');">parser</a></tt><tt class="py-op">=</tt><tt id="link-14" class="py-name" targets="Function EveryGO.get_parser()=EveryGO-module.html#get_parser,Function GOslimmer_xml.get_parser()=GOslimmer_xml-module.html#get_parser,Function GOtrimmer.get_parser()=GOtrimmer-module.html#get_parser,Function GetGOxML.get_parser()=GetGOxML-module.html#get_parser,Function GoXML.get_parser()=GoXML-module.html#get_parser,Function VCFtoGO.get_parser()=VCFtoGO-module.html#get_parser"><a title="EveryGO.get_parser
+GOslimmer_xml.get_parser
+GOtrimmer.get_parser
+GetGOxML.get_parser
+GoXML.get_parser
+VCFtoGO.get_parser" class="py-name" href="#" onclick="return doclink('link-14', 'get_parser', 'link-14');">get_parser</a></tt><tt class="py-op">(</tt><tt class="py-op">)</tt> </tt>
+<a name="L185"></a><tt class="py-lineno">185</tt>  <tt class="py-line"> </tt>
+<a name="L186"></a><tt class="py-lineno">186</tt>  <tt class="py-line">        <tt class="py-comment">######## Print parser help if arguments missed #################</tt> </tt>
+<a name="L187"></a><tt class="py-lineno">187</tt>  <tt class="py-line">        <tt class="py-keyword">if</tt> <tt class="py-name">len</tt><tt class="py-op">(</tt><tt class="py-name">sys</tt><tt class="py-op">.</tt><tt class="py-name">argv</tt><tt class="py-op">)</tt><tt class="py-op">==</tt><tt class="py-number">1</tt><tt class="py-op">:</tt> </tt>
+<a name="L188"></a><tt class="py-lineno">188</tt>  <tt class="py-line">                <tt id="link-15" class="py-name"><a title="GOtrimmer.parser" class="py-name" href="#" onclick="return doclink('link-15', 'parser', 'link-1');">parser</a></tt><tt class="py-op">.</tt><tt class="py-name">print_help</tt><tt class="py-op">(</tt><tt class="py-op">)</tt> </tt>
+<a name="L189"></a><tt class="py-lineno">189</tt>  <tt class="py-line">                <tt class="py-name">sys</tt><tt class="py-op">.</tt><tt class="py-name">exit</tt><tt class="py-op">(</tt><tt class="py-number">1</tt><tt class="py-op">)</tt> </tt>
+<a name="L190"></a><tt class="py-lineno">190</tt>  <tt class="py-line">         </tt>
+<a name="L191"></a><tt class="py-lineno">191</tt>  <tt class="py-line">        <tt class="py-comment">##################  Manage Arguments  ##########################</tt> </tt>
+<a name="L192"></a><tt class="py-lineno">192</tt>  <tt class="py-line"> </tt>
+<a name="L193"></a><tt class="py-lineno">193</tt>  <tt class="py-line">        <tt class="py-comment">#Parse arguments</tt> </tt>
+<a name="L194"></a><tt class="py-lineno">194</tt>  <tt class="py-line">        <tt id="link-16" class="py-name" targets="Variable GOtrimmer.Arguments=GOtrimmer-module.html#Arguments"><a title="GOtrimmer.Arguments" class="py-name" href="#" onclick="return doclink('link-16', 'Arguments', 'link-16');">Arguments</a></tt><tt class="py-op">=</tt><tt id="link-17" class="py-name"><a title="GOtrimmer.parser" class="py-name" href="#" onclick="return doclink('link-17', 'parser', 'link-1');">parser</a></tt><tt class="py-op">.</tt><tt class="py-name">parse_args</tt><tt class="py-op">(</tt><tt class="py-op">)</tt> </tt>
+<a name="L195"></a><tt class="py-lineno">195</tt>  <tt class="py-line">        <tt class="py-comment">#execute functions</tt> </tt>
+<a name="L196"></a><tt class="py-lineno">196</tt>  <tt class="py-line"> </tt>
+<a name="L197"></a><tt class="py-lineno">197</tt>  <tt class="py-line">        <tt class="py-comment">#Make universe of GO-terms if its necessary</tt> </tt>
+<a name="L198"></a><tt class="py-lineno">198</tt>  <tt class="py-line">        <tt class="py-keyword">if</tt> <tt id="link-18" class="py-name"><a title="GOtrimmer.Arguments" class="py-name" href="#" onclick="return doclink('link-18', 'Arguments', 'link-16');">Arguments</a></tt><tt class="py-op">.</tt><tt class="py-name">mkuniverse</tt><tt class="py-op">:</tt> </tt>
+<a name="L199"></a><tt class="py-lineno">199</tt>  <tt class="py-line">                <tt id="link-19" class="py-name" targets="Function EveryGO.makeuniverse()=EveryGO-module.html#makeuniverse"><a title="EveryGO.makeuniverse" class="py-name" href="#" onclick="return doclink('link-19', 'makeuniverse', 'link-19');">makeuniverse</a></tt><tt class="py-op">(</tt><tt id="link-20" class="py-name"><a title="GOtrimmer.Arguments" class="py-name" href="#" onclick="return doclink('link-20', 'Arguments', 'link-16');">Arguments</a></tt><tt class="py-op">.</tt><tt class="py-name">Xml</tt><tt class="py-op">)</tt> </tt>
+<a name="L200"></a><tt class="py-lineno">200</tt>  <tt class="py-line"> </tt>
+<a name="L201"></a><tt class="py-lineno">201</tt>  <tt class="py-line">        <tt class="py-comment">#Then, make enrichment analysis for every comparison n&#176; choosed</tt> </tt>
+<a name="L202"></a><tt class="py-lineno">202</tt>  <tt class="py-line">        <tt id="link-21" class="py-name" targets="Function EveryGO.everygo()=EveryGO-module.html#everygo"><a title="EveryGO.everygo" class="py-name" href="#" onclick="return doclink('link-21', 'everygo', 'link-21');">everygo</a></tt><tt class="py-op">(</tt><tt id="link-22" class="py-name"><a title="GOtrimmer.Arguments" class="py-name" href="#" onclick="return doclink('link-22', 'Arguments', 'link-16');">Arguments</a></tt><tt class="py-op">.</tt><tt class="py-name">Comp</tt><tt class="py-op">,</tt><tt id="link-23" class="py-name"><a title="GOtrimmer.Arguments" class="py-name" href="#" onclick="return doclink('link-23', 'Arguments', 'link-16');">Arguments</a></tt><tt class="py-op">.</tt><tt class="py-name">View</tt><tt class="py-op">,</tt><tt id="link-24" class="py-name"><a title="GOtrimmer.Arguments" class="py-name" href="#" onclick="return doclink('link-24', 'Arguments', 'link-16');">Arguments</a></tt><tt class="py-op">.</tt><tt class="py-name">XmlComp</tt><tt class="py-op">,</tt><tt id="link-25" class="py-name"><a title="GOtrimmer.Arguments" class="py-name" href="#" onclick="return doclink('link-25', 'Arguments', 'link-16');">Arguments</a></tt><tt class="py-op">.</tt><tt class="py-name">Rpath</tt><tt class="py-op">)</tt> </tt>
+<a name="L203"></a><tt class="py-lineno">203</tt>  <tt class="py-line">        <tt class="py-comment">#Remove temporary file</tt> </tt>
+<a name="L204"></a><tt class="py-lineno">204</tt>  <tt class="py-line">        <tt class="py-name">os</tt><tt class="py-op">.</tt><tt class="py-name">system</tt><tt class="py-op">(</tt><tt class="py-string">'rm univers.txt'</tt><tt class="py-op">)</tt> </tt>
+</div><a name="L205"></a><tt class="py-lineno">205</tt>  <tt class="py-line">        <tt class="py-comment">#FINAL OUTPUT:  For GoWalker --&gt; str(numxml)/Enrichment_analysis_results.txt (tabulated text)</tt> </tt>
+<a name="L206"></a><tt class="py-lineno">206</tt>  <tt class="py-line">        <tt class="py-comment">#                               For GoView --&gt; str(numxml)/GO_distribution.pdf</tt> </tt>
+<a name="L207"></a><tt class="py-lineno">207</tt>  <tt class="py-line"> </tt>
+<a name="L208"></a><tt class="py-lineno">208</tt>  <tt class="py-line"> </tt>
+<a name="L209"></a><tt class="py-lineno">209</tt>  <tt class="py-line"><tt class="py-comment">#############################################################################</tt> </tt>
+<a name="L210"></a><tt class="py-lineno">210</tt>  <tt class="py-line"><tt class="py-comment">#Do not execute the script if it was imported as a module!</tt> </tt>
+<a name="L211"></a><tt class="py-lineno">211</tt>  <tt class="py-line"><tt class="py-keyword">if</tt> <tt class="py-name">__name__</tt> <tt class="py-op">==</tt> <tt class="py-string">"__main__"</tt><tt class="py-op">:</tt>                                                                                                       </tt>
+<a name="L212"></a><tt class="py-lineno">212</tt>  <tt class="py-line">        <tt id="link-26" class="py-name" targets="Function EveryGO.main()=EveryGO-module.html#main,Function GOslimmer_xml.main()=GOslimmer_xml-module.html#main,Function GetGOxML.main()=GetGOxML-module.html#main,Function GoXML.main()=GoXML-module.html#main,Function VCFtoGO.main()=VCFtoGO-module.html#main"><a title="EveryGO.main
+GOslimmer_xml.main
+GetGOxML.main
+GoXML.main
+VCFtoGO.main" class="py-name" href="#" onclick="return doclink('link-26', 'main', 'link-26');">main</a></tt><tt class="py-op">(</tt><tt class="py-op">)</tt>                                                                                           </tt>
+<a name="L213"></a><tt class="py-lineno">213</tt>  <tt class="py-line"><tt class="py-comment">#############################################################################</tt> </tt>
+<a name="L214"></a><tt class="py-lineno">214</tt>  <tt class="py-line"> </tt><script type="text/javascript">
+<!--
+expandto(location.href);
+// -->
+</script>
+</pre>
+<br />
+<!-- ==================== NAVIGATION BAR ==================== -->
+<table class="navbar" border="0" width="100%" cellpadding="0"
+       bgcolor="#a0c0ff" cellspacing="0">
+  <tr valign="middle">
+
+  <!-- Tree link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="module-tree.html">Trees</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Index link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="identifier-index.html">Indices</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Help link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="help.html">Help</a>&nbsp;&nbsp;&nbsp;</th>
+
+      <th class="navbar" width="100%"></th>
+  </tr>
+</table>
+<table border="0" cellpadding="0" cellspacing="0" width="100%%">
+  <tr>
+    <td align="left" class="footer">
+    Generated by Epydoc 3.0.1
+    on Tue Dec  5 18:02:10 2017
+    </td>
+    <td align="right" class="footer">
+      <a target="mainFrame" href="http://epydoc.sourceforge.net"
+        >http://epydoc.sourceforge.net</a>
+    </td>
+  </tr>
+</table>
+
+<script type="text/javascript">
+  <!--
+  // Private objects are initially displayed (because if
+  // javascript is turned off then we want them to be
+  // visible); but by default, we want to hide them.  So hide
+  // them unless we have a cookie that says to show them.
+  checkCookie();
+  // -->
+</script>
+</body>
+</html>
