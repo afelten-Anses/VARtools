@@ -3,7 +3,7 @@
 import os, sys, time  
 import argparse       				#arguments parser
 import uuid           				#uuid filename format
-import urllib,urllib2 				#html requests
+import urllib,urllib2,requests		#html requests
 from lxml import etree 				#xml parser
 import xml.etree.ElementTree as ET 	#xml parser ElemenTree only
 
@@ -380,14 +380,17 @@ def UNIPROTtoGO(path,output,protlist,dicoGO,GOFile,GO_prok): #Uniprot to GO ids 
 						while goterm==None:
 
 							try:
-								print 'http://www.ebi.ac.uk/QuickGO-Old/GAnnotation?protein='+str(protlist[i])+'&col=goID,aspect,goName&format=tsv'
-								#urllib.urlretrieve('http://www.ebi.ac.uk/QuickGO-Old/GAnnotation?protein='+str(protlist[i])+'&col=goID,aspect,goName&format=tsv',tsvname)
-								os.system('wget http://www.ebi.ac.uk/QuickGO-Old/GAnnotation?protein='+str(protlist[i])+\
-									'&col=goID,aspect,goName&format=tsv > ' + tsvname + " > /dev/null 2>&1")
+								url="http://www.ebi.ac.uk/QuickGO-Old/GAnnotation?protein="+str(protlist[i])+"&col=goID,aspect,goName&format=tsv"
+								tsv = requests.get(url, verify=True)
+								# tsv=urllib2.urlopen('http://www.ebi.ac.uk/QuickGO-Old/GAnnotation?protein='+str(protlist[i])+'&col=goID,aspect,goName&format=tsv')
+								# _,tsvparams = cgi.parse_header(tsv.headers.get('Content-Disposition', '')) # _, to avoid tsvname as a tuple
+								# tsvname = tsvparams['filename']
 								#retrieve .tsv file which contains GO IDs for this Uniprot ID
-								with open(tsvname,'r') as sourcetmp:
+								with open(tsvname,'w') as addtmp:
+									addtmp.write(tsv.text) #write content from request
 
-									lignestmp=sourcetmp.readlines()
+								with open(tsvname,'r') as sourcetmp:
+									lignestmp=sourcetmp.readlines() #read content from request
 
 									for goterm in lignestmp:
 
