@@ -154,7 +154,6 @@ def extractNP(path, withHomoplasy): #Retrieve NP ids from XML file
 	
 	for var in tree.xpath("NODE/COMPARISON/VARIANTS/VARIANT"):
 
-		#print var
 
 		homop = var.findall('HOMOPLASY')[0]
 		
@@ -163,7 +162,6 @@ def extractNP(path, withHomoplasy): #Retrieve NP ids from XML file
 
 		for nps in var.xpath("REGION/TRANSCRIT"):
 
-			#print 	nps.text
 
 		#for nps in tree.xpath("NODE/COMPARISON/VARIANTS/VARIANT/REGION/TRANSCRIT"):
 
@@ -200,16 +198,14 @@ def idmapping(nplist,dicoNP,NPfile): # ID mapping from NP LIST (not from XML, bc
 	#counter
 	t0=time.time()
 	nb2=0
-	#/counter
 
 	#Dublicate protlist variable (protlist=nplist=list of np values)
 	protlist=nplist
 
-	#print nplist
 
 	#DicoNP store every NP to Uniprot ids
 	for np in range(len(nplist)):
-		#print np
+
 		#For every NP in list, if they exists in DicoNP (from local file), store them in protlist 
 		if nplist[np] in dicoNP and "P_" in nplist[np] and nplist[np]!='':
 
@@ -222,14 +218,12 @@ def idmapping(nplist,dicoNP,NPfile): # ID mapping from NP LIST (not from XML, bc
 			#if page!=None : request completed. 
 			page=None
 
-			#print nplist[np]
 
 			if "P_" in nplist[np]:
 
 				while page==None: #While request is not completed, retry.
 
 					try :
-
 
 						#RETRIEVE UNIPROT ID FROM NP ID
 						#Custom url in order to retrieve Uniprot ids from NP ids
@@ -244,9 +238,7 @@ def idmapping(nplist,dicoNP,NPfile): # ID mapping from NP LIST (not from XML, bc
 						#STORE the new NP to Uniprot Id in local NP-EBI-databases.tsv if not already exists
 						f = open(NPfile,'a+')
 						if (len(str(page))>0) :
-							#print "init:" + page
 							page = page.split('\n')[0] + '\n'
-							#print "final:" + page #### AAAAAAAAAAAAAAAAAAAAAAAAAAA
 							if page not in f.readlines(): #Fix 05.08.16
 								f.write(str(nplist[np]) + '\t' + str(page))
 						f.close()
@@ -254,7 +246,6 @@ def idmapping(nplist,dicoNP,NPfile): # ID mapping from NP LIST (not from XML, bc
 						##ADD this new NP to UNiprot id in dicoNP in order to retrieve offline immediattly (id may be in next requests)
 						dicoNP[str(nplist[np])]=page
 						protlist[np]=page
-
 
 
 					except urllib2.URLError: #Retry in case of timeout
@@ -269,8 +260,7 @@ def idmapping(nplist,dicoNP,NPfile): # ID mapping from NP LIST (not from XML, bc
 		nb2+=1
 		sys.stdout.write("\r{0} ID's mapped".format(nb2))
 
-	#print "\n--> ok: processed in",int(time.time()-t0),"seconds"
-
+	print "\n--> ok: processed in",int(time.time()-t0),"seconds"
 	return protlist
 
 
@@ -335,8 +325,8 @@ def UNIPROTtoGO(path,output,protlist,dicoGO,GOFile,GO_prok): #Uniprot to GO ids 
 
 					dicogo={} #dicogo: temporary dictionnary in order to control and avoid GO duplicates for a same Uniprot-id during GO-term retrieving
 						   # !=dicoGO: dictionnary which stores Uniprot to GO ids.
-
 					#Create <GOLIST></GOLIST> markups
+
 					golist=etree.Element("GOLIST")
 					#AND FOR EVERY GO : retrive GO-id, GO-aspect, GO-description
 					#AND store them in XML file
@@ -357,7 +347,6 @@ def UNIPROTtoGO(path,output,protlist,dicoGO,GOFile,GO_prok): #Uniprot to GO ids 
 							interm=term.split('|')
 							#Some magic in order to have a clean ouput: start
 							goID.text=str(interm[0]).replace("['","")
-							#print goID.text
 							
 
 							if len(interm)>1 :
