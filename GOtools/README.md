@@ -11,11 +11,13 @@ HTML and PDF technical documentation are available in the 'docs/' directory.
 GoXML and EveryGO
 =================
 
+![](workflow.png?raw=true "GoXML and EveryGO workflow")
+
  'GetGOxML' aims to centralize the functional annotations of variants (i.e. genotype, effect of homoplasy, NP numbers, gene IDs, gene names, type, position, phenotypical impact) with the GO-terms information in a unique XML file.
 
 Based on the accession numbers contained in the XML file, the driving script 'GetGOxML' invokes the scripts 'GOSlimmer_XML' and 'GOxML' in order to associate the identified variants with their respective and relevant GO-terms reachable in the [QuickGO browser](http://www.ebi.ac.uk/GOA) 
 
-- 'GOSlimer_XML' generates prokaryote-specific subset of GO terms (go_prok.txt) from a Gene Ontology graph (i.e. [go-basic.obo](http://geneontology.org/page/download-ontology)  file)  in order to remove Eukaryote GO-terms from the dataset.
+- 'GOSlimer_XML' generates prokaryote-specific subset of GO terms (go_prok.txt) from a Gene Ontology graph (i.e. [go-basic.obo](http://geneontology.org/page/download-ontology)  file)  in order to remove eukaryote-specific GO-terms from the dataset.
 
 - 'GOxML' associates NCBI accession identifiers contained in the XML file with their respective relevant GO-terms
 
@@ -26,7 +28,7 @@ By using the XML file, the driving script 'EveryGO' selects non-synonymous varia
 
 -  'GOView' computes a graphical representation of the GO-term enrichment analysis.
 
-![](workflow.png?raw=true "GoXML and EveryGO workflow")
+
 
 
 Quick Start
