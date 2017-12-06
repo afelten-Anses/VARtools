@@ -3,8 +3,9 @@ library(gridExtra)
 #Parse args
 args <- commandArgs(TRUE)
 compvalue=args[1]
+filepath=args[2]
 #Parse hypergeometric file results
-resultats=read.delim((paste(compvalue,"/","Enrichment_analysis_results.txt",sep="")),sep=";")
+resultats=read.delim((paste(compvalue,"/",filepath,sep="")),sep="\t")
 x <-as.numeric(c(resultats$Pvalue))
 profondeur <-as.numeric(resultats$Golevel)
 y <- as.numeric(resultats$Golevel)

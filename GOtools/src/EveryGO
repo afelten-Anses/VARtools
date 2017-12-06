@@ -169,7 +169,7 @@ def everygo(compvalues,view,xmlname,Rpath):
 		os.system('cat '+str(numxml)+'/hyperesults_cc.txt | awk \'{print $0 ";CC"}\' >> '+str(numxml)+'/hyperesults.txt')
 		for i in range(0,3): #delete headers pasted from hyperesults_bp _cc and _mf
 			os.system('sed 1d '+str(numxml)+'/hyperesults.txt -i')
-		resultpath="HyperGeoTest_results.tsv"
+		resultpath=str(numxml) + "/HyperGeoTest_results.tsv" #final results
 		result = open(resultpath,'w')
 		result.write("GO:ID\tGo term\tNumber of hits\tExpected number of hits\tGo level\tP-value\tCorrected p-value\tAspect\n")
 		tempresults=open(str(numxml)+'/hyperesults.txt')
@@ -179,32 +179,16 @@ def everygo(compvalues,view,xmlname,Rpath):
 		for line in lines:
 			result.write(line.replace(";","\t"))
 		result.close()
-		# os.system('sed -i \'0,/BP/s//Aspect/\' '+str(numxml)+'hyperesults.txt') # Correcting header name
-		# os.system('sed -i \'0,/CC/s//Aspect/\' '+str(numxml)+'hyperesults.txt')
-		# os.system('sed -i \'0,/MF/s//Aspect/\' '+str(numxml)+'hyperesults.txt')
-		# os.system('sort -r '+str(numxml)+'/hyperesults.txt') # keep one header
-		# os.system('sed 1d '+str(numxml)+'/hyperesults.txt -i')
-		# os.system('sed 1d '+str(numxml)+'/hyperesults.txt -i')
-		# #add GO ASPECT INFO for Goview (Enrichment_analysis_results.txt)
-		# os.system('cut -d ";" -s -f 4,5 '+str(numxml)+'/hyperesults_bp.txt | awk \'{print $0 ";BP"}\' > '+str(numxml)+'/hyperesults_all.txt')
-		# os.system('cut -d ";" -s -f 4,5 '+str(numxml)+'/hyperesults_mf.txt | awk \'{print $0 ";MF"}\' >> '+str(numxml)+'/hyperesults_all.txt')
-		# os.system('cut -d ";" -s -f 4,5 '+str(numxml)+'/hyperesults_cc.txt | awk \'{print $0 ";CC"}\' >> '+str(numxml)+'/hyperesults_all.txt')
-		# os.system("sort -r "+str(numxml)+"/hyperesults_all.txt | uniq | sed '1d'| sed '1d' | sed '1d' > "+str(numxml)+"/hyperesults_all_final.txt") #keep one header
-		# os.system("sed -i '1i Golevel;Pvalue;Aspect' "+str(numxml)+"/hyperesults_all_final.txt") 
-		# os.system("cat "+str(numxml)+"/hyperesults_all_final.txt | tr '\"' '0' > "+str(numxml)+"/Enrichment_analysis_results.txt") #cleaning output
 
 		#OPTIONNAL GRAPHICAL REPRESENTATION
 		if view:
 			print "Generating grahical representation"
-			os.system("R --vanilla --slave --args "+" "+ str(numxml)+" < " + Rpath + "GoView")
+			os.system("R --vanilla --slave --args "+" "+ str(numxml)+" "+ "hyperesults.txt" +" < " + Rpath + "GoView")
 
 		#remove temporary files
-		#os.system('rm '+str(numxml)+'/hyperesults_* '+str(numxml)+'/go* '+str(numxml)+'/Enrichment_analysis_results.txt')
+		os.system('rm '+str(numxml)+'/hyperesults* '+str(numxml)+'/go* '+str(numxml)+'/Enrichment_analysis_results.txt')
 
-		#FINAL OUTPUT: 	For GoWalker --> str(numxml)/Enrichment_analysis_results.txt (tabulated text)
-		# 				For GoView --> str(numxml)/GO_distribution.pdf
-
-																										
+																								
 		
 #######################################################################################################################
 #MAIN##################################################################################################################
