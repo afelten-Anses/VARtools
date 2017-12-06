@@ -39,23 +39,29 @@ def get_parser():	#Parse arguments
 						type=str, required=True, help='XML input file obtained from the GoXML including variants of interest (REQUIRED)')	
 
 	parser.add_argument('-comp', action="store", dest='Comp', 
-						type=str, required=True, nargs='+', help='one or several values refering to XML comparison ids (ascending order, REQUIRED)')
+						type=str, required=True, nargs='+', help='XML (Variants of interest xml) comparison values to analyse (enter args by ascending order, REQUIRED)')
  
 	parser.add_argument('-rpath', action="store", dest='Rpath', 
 						type=str, required=True, help='Rscripts folder path (REQUIRED)')		
 
 	parser.add_argument('--mkuniverse', dest='mkuniverse', action='store_true', 
-						help='build universe', default=False)
+						help='build universe of GO-terms from the XML files including all variants (slower but required for first execution \
+						on a new XML file. For next uses,keep "univers.txt" and dont use --mkuniverse option until a new XML file (the one including all variants \
+						is used) or use --newuniverse option', default=False)
+
+	parser.add_argument('--sameuniverse', dest='sameuniverse', action='store_true', 
+						help='re-use the universe of GO-Terms (univers.txt) generated from previous analyzes (faster, but relevant only if "univers.txt" was generated \
+						from the same XML file including all variants (-xml) used for this analysis. "univers.txt" have to be placed at the root of the analysis folder', default=False)
 
 	parser.add_argument('--view', dest='View', action='store_true', 
-						help='generate graphical representation', default=False)
+						help='Generate graphical representation of the enrichment results', default=False)
 
 	return parser
 
 
 def makeuniverse(xmlname):
 	"""
-	Make universe of GO-terms from the XML file
+	Make universe of GO-terms from the XML file: will be used ONLY if a NEW XML file (the one including all variant) is used
 	@param xmlname: the xml filename
 	@type xmlname: string
 	"""
@@ -197,11 +203,18 @@ def main():
 	#Make universe of GO-terms if its necessary
 	if Arguments.mkuniverse:
 		makeuniverse(Arguments.Xml)
+		#Then, make enrichment analysis for every comparison n° choosed using a new "univers.txt" file
+		everygo(Arguments.Comp,Arguments.View,Arguments.XmlComp,Arguments.Rpath)
 
-	#Then, make enrichment analysis for every comparison n° choosed
-	everygo(Arguments.Comp,Arguments.View,Arguments.XmlComp,Arguments.Rpath)
+	elif Arguments.sameuniverse:
+		#make enrichment analysis for every comparison n° choosed. Using same "univers.txt" file
+		everygo(Arguments.Comp,Arguments.View,Arguments.XmlComp,Arguments.Rpath)
+	else:
+		print "Please use --mkuniverse (in case of new -xml file) or --sameuniverse option (in case of same -xml file)"
+	
+
 	#Remove temporary file
-	os.system('rm univers.txt')
+	#os.system('rm univers.txt')
 	#FINAL OUTPUT: 	For GoWalker --> str(numxml)/Enrichment_analysis_results.txt (tabulated text)
 	# 				For GoView --> str(numxml)/GO_distribution.pdf
 
