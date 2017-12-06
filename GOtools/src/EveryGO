@@ -91,6 +91,20 @@ def makeuniverse(xmlname):
 					if str(GO.text) != "[]":
 						univ.write(str(GO.text).replace("['","")+'\n')
 
+def getcompvalues(xmlcomp):
+	xmlfile=open(xmlcomp,'r')
+	lines=xmlfile.readlines()
+	i=1
+	dicoresults={}
+
+	for line in lines:
+		if "<COMPARISON value=" in line:
+			value=int(line.split('"')[1])
+			dicoresults[value]=i
+			i+=1
+
+	return dicoresults
+
 
 def everygo(compvalues,view,xmlname,Rpath):
 	"""
@@ -117,9 +131,8 @@ def everygo(compvalues,view,xmlname,Rpath):
 
 	#For each comparison values (in Arguments -comp),create a specific path if dont exists and collect go-terms (more details below)
 	for numxml in compvalues:
-		goechlist=[] 		#goechlist=list of non-enriched GO-terms from comparison x
-		num=int(numxml)-1	#numxl=comparison number in xml(the x of comparison value="x"),start from 1
-							#num=comparison number indice in the list num. num starts from 0 , so num=numxml-1
+		goechlist=[] #goechlist=list of non-enriched GO-terms from comparison x
+		num=getcompvalues(xmlname)[int(numxml)]
 
 		#Create a path specific for <COMPARISON Value>
 		if not os.path.exists(str(numxml)+"/"):
@@ -154,19 +167,31 @@ def everygo(compvalues,view,xmlname,Rpath):
 		os.system('cat '+str(numxml)+'/hyperesults_bp.txt | awk \'{print $0 ";BP"}\' > '+str(numxml)+'/hyperesults.txt') # add Aspect tag
 		os.system('cat '+str(numxml)+'/hyperesults_mf.txt | awk \'{print $0 ";MF"}\' >> '+str(numxml)+'/hyperesults.txt')
 		os.system('cat '+str(numxml)+'/hyperesults_cc.txt | awk \'{print $0 ";CC"}\' >> '+str(numxml)+'/hyperesults.txt')
-		os.system('sed -i \'0,/BP/s//Aspect/\' '+str(numxml)+'hyperesults.txt') # Correcting header name
-		os.system('sed -i \'0,/CC/s//Aspect/\' '+str(numxml)+'hyperesults.txt')
-		os.system('sed -i \'0,/MF/s//Aspect/\' '+str(numxml)+'hyperesults.txt')
-		os.system('sort -r '+str(numxml)+'/hyperesults.txt') # keep one header
-		os.system('sed 1d '+str(numxml)+'/hyperesults.txt -i')
-		os.system('sed 1d '+str(numxml)+'/hyperesults.txt -i')
-		#add GO ASPECT INFO for Goview (Enrichment_analysis_results.txt)
-		os.system('cut -d ";" -s -f 4,5 '+str(numxml)+'/hyperesults_bp.txt | awk \'{print $0 ";BP"}\' > '+str(numxml)+'/hyperesults_all.txt')
-		os.system('cut -d ";" -s -f 4,5 '+str(numxml)+'/hyperesults_mf.txt | awk \'{print $0 ";MF"}\' >> '+str(numxml)+'/hyperesults_all.txt')
-		os.system('cut -d ";" -s -f 4,5 '+str(numxml)+'/hyperesults_cc.txt | awk \'{print $0 ";CC"}\' >> '+str(numxml)+'/hyperesults_all.txt')
-		os.system("sort -r "+str(numxml)+"/hyperesults_all.txt | uniq | sed '1d'| sed '1d' | sed '1d' > "+str(numxml)+"/hyperesults_all_final.txt") #keep one header
-		os.system("sed -i '1i Golevel;Pvalue;Aspect' "+str(numxml)+"/hyperesults_all_final.txt") 
-		os.system("cat "+str(numxml)+"/hyperesults_all_final.txt | tr '\"' '0' > "+str(numxml)+"/Enrichment_analysis_results.txt") #cleaning output
+		for i in range(0,3): #delete headers pasted from hyperesults_bp _cc and _mf
+			os.system('sed 1d '+str(numxml)+'/hyperesults.txt -i')
+		resultpath="HyperGeoTest_results.tsv"
+		result = open(resultpath,'w')
+		result.write("GO:ID\tGo term\tNumber of hits\tExpected number of hits\tGo level\tP-value\tCorrected p-value\tAspect\n")
+		tempresults=open(str(numxml)+'/hyperesults.txt')
+		lines=tempresults.readlines()
+		tempresults.close()
+
+		for line in lines:
+			result.write(line.replace(";","\t"))
+		result.close()
+		# os.system('sed -i \'0,/BP/s//Aspect/\' '+str(numxml)+'hyperesults.txt') # Correcting header name
+		# os.system('sed -i \'0,/CC/s//Aspect/\' '+str(numxml)+'hyperesults.txt')
+		# os.system('sed -i \'0,/MF/s//Aspect/\' '+str(numxml)+'hyperesults.txt')
+		# os.system('sort -r '+str(numxml)+'/hyperesults.txt') # keep one header
+		# os.system('sed 1d '+str(numxml)+'/hyperesults.txt -i')
+		# os.system('sed 1d '+str(numxml)+'/hyperesults.txt -i')
+		# #add GO ASPECT INFO for Goview (Enrichment_analysis_results.txt)
+		# os.system('cut -d ";" -s -f 4,5 '+str(numxml)+'/hyperesults_bp.txt | awk \'{print $0 ";BP"}\' > '+str(numxml)+'/hyperesults_all.txt')
+		# os.system('cut -d ";" -s -f 4,5 '+str(numxml)+'/hyperesults_mf.txt | awk \'{print $0 ";MF"}\' >> '+str(numxml)+'/hyperesults_all.txt')
+		# os.system('cut -d ";" -s -f 4,5 '+str(numxml)+'/hyperesults_cc.txt | awk \'{print $0 ";CC"}\' >> '+str(numxml)+'/hyperesults_all.txt')
+		# os.system("sort -r "+str(numxml)+"/hyperesults_all.txt | uniq | sed '1d'| sed '1d' | sed '1d' > "+str(numxml)+"/hyperesults_all_final.txt") #keep one header
+		# os.system("sed -i '1i Golevel;Pvalue;Aspect' "+str(numxml)+"/hyperesults_all_final.txt") 
+		# os.system("cat "+str(numxml)+"/hyperesults_all_final.txt | tr '\"' '0' > "+str(numxml)+"/Enrichment_analysis_results.txt") #cleaning output
 
 		#OPTIONNAL GRAPHICAL REPRESENTATION
 		if view:
