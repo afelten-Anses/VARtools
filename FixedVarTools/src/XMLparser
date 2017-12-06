@@ -32,11 +32,11 @@ def get_parser():
 	parser.add_argument('-i', action="store", dest='XML', 
 						type=str, required=True, help='XML obtained with phyloFixedVar or FixedVar')
 
-	parser.add_argument('-c', action="store", dest='comparisonNb', 
-						type=int, default=0, help='comparison id to extract (default:all)')
-
 	parser.add_argument('-n', action="store", dest='nodeNb', 
 						type=int, default=0, help='Node id to extract (default:all). If a combination node is given, this option don\'t work.')
+
+	parser.add_argument('-c', action="store", dest='comparisonNb', 
+						type=int, default=0, help='comparison id to extract, required nodeNb option (default:all)')
 
 	parser.add_argument('-o', action="store", dest='OUTPUT', 
 						type=str, default='output', help='output Prefix for the TSV file(default:output)')
@@ -116,7 +116,7 @@ def main():
 				outputXML.write(line)
 
 		elif(writeNode and "<COMPARISON" in line):
-			if(Arguments.comparisonNb!=0 and Arguments.comparisonNb!=line.split("\"")[1]):
+			if(Arguments.comparisonNb!=0 and Arguments.comparisonNb!=int(line.split("\"")[1])):
 				writeComparison = False
 			else:
 				writeComparison = True	
