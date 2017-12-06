@@ -32,7 +32,7 @@ def get_parser():
 
 
 	parser.add_argument('-obo', action="store", dest='obo', 
-						type=str, required=True, help='go-basi.obo path (REQUIRED)')
+						type=str, required=True, help='go-basic.obo path (REQUIRED)')
 
 
 	parser.add_argument('-o', action="store", dest='output', 
@@ -51,7 +51,7 @@ def get_parser():
 						type=str, required=True, help='GO_prok.txt path (REQUIRED)')
 
 
-	parser.add_argument('--withHomoplasy', dest='withHomoplasy', action='store_true', help='keep homoplasy variants', default=False)
+	parser.add_argument('--withHomoplasy', dest='withHomoplasy', action='store_true', help='keep homoplasic variants', default=False)
 
 
 
@@ -290,7 +290,7 @@ def UNIPROTtoGO(path,output,protlist,dicoGO,GOFile,GO_prok): #Uniprot to GO ids 
 	nb3=0
 	tsvname="annotation"+str(uuid.uuid4())+".tsv"
 	#/counter initialisation
-	filename=str(output) #filename: name of XML output that will contain GO-informations
+	filename=str(output)+".xml" #filename: name of XML output that will contain GO-informations
 	outputFile = open(filename, "w") #see above
 
 	i=0 #control uniprot ids list reading
@@ -382,10 +382,7 @@ def UNIPROTtoGO(path,output,protlist,dicoGO,GOFile,GO_prok): #Uniprot to GO ids 
 							try:
 								url="http://www.ebi.ac.uk/QuickGO-Old/GAnnotation?protein="+str(protlist[i])+"&col=goID,aspect,goName&format=tsv"
 								tsv = requests.get(url, verify=True)
-								# tsv=urllib2.urlopen('http://www.ebi.ac.uk/QuickGO-Old/GAnnotation?protein='+str(protlist[i])+'&col=goID,aspect,goName&format=tsv')
-								# _,tsvparams = cgi.parse_header(tsv.headers.get('Content-Disposition', '')) # _, to avoid tsvname as a tuple
-								# tsvname = tsvparams['filename']
-								#retrieve .tsv file which contains GO IDs for this Uniprot ID
+
 								with open(tsvname,'w') as addtmp:
 									addtmp.write(tsv.text) #write content from request
 
