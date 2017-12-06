@@ -36,7 +36,8 @@ def get_parser():	#Parse arguments
 						type=str, required=True, help='XML input file obtained from the GoXML including all variants (REQUIRED)')
 
 	parser.add_argument('-xmlcomp', action="store", dest='XmlComp', 
-						type=str, required=True, help='XML input file obtained from the GoXML including variants of interest (REQUIRED)')	
+						type=str, required=True, help='XML input file obtained from the GoXML including variants of interest. \
+						Can be the same than -xml option or from XMLParser output. (REQUIRED)')	
 
 	parser.add_argument('-comp', action="store", dest='Comp', 
 						type=str, required=True, nargs='+', help='XML (Variants of interest xml) comparison values to analyse (enter args by ascending order, REQUIRED)')
