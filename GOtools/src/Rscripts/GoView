@@ -6,10 +6,10 @@ compvalue=args[1]
 filepath=args[2]
 #Parse hypergeometric file results
 resultats=read.delim((paste(compvalue,"/",filepath,sep="")),sep="\t")
-x <-as.numeric(c(resultats$Pvalue))
-profondeur <-as.numeric(resultats$Golevel)
-y <- as.numeric(resultats$Golevel)
-LogP <- as.numeric(c(log(resultats$Pvalue)))
+x <-as.numeric(c(resultats$P.value))
+profondeur <-as.numeric(resultats$Go.level)
+y <- as.numeric(resultats$Go.level)
+LogP <- as.numeric(c(log(resultats$P.value)))
 yx <- resultats[1:2]
 
 #Aspect=dataframe (value= MF,BP or CC)
@@ -33,16 +33,17 @@ for(i in 1:length(resultats$Aspect))
   }
 }
 mini=0.5
-for(i in 1:length(resultats$Pvalue))
+for(i in 1:length(resultats$P.value))
 {
-  if(resultats[i,2]!=0)
+  if(resultats$P.value[i]!=0)
   {
-    if((log(resultats[i,2]))<mini)
+    if((log(resultats$P.value[i]))<mini)
     {
-      mini<-log(resultats[i,2])
+      mini<-log(resultats$P.value[i])
     }
   }
 }
+
 Aspect <- as.factor(c(rep("Molecular function",MF), rep("Biological process",BP),rep("Cellular Component",CC))) # 800condition1+852condition2 soit 1652 de longueur comme les autres variables
 #ou 
 #Aspect <-as.factor(c(aspect))

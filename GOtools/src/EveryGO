@@ -167,8 +167,8 @@ def everygo(compvalues,view,xmlname,Rpath):
 		os.system('cat '+str(numxml)+'/hyperesults_bp.txt | awk \'{print $0 ";BP"}\' > '+str(numxml)+'/hyperesults.txt') # add Aspect tag
 		os.system('cat '+str(numxml)+'/hyperesults_mf.txt | awk \'{print $0 ";MF"}\' >> '+str(numxml)+'/hyperesults.txt')
 		os.system('cat '+str(numxml)+'/hyperesults_cc.txt | awk \'{print $0 ";CC"}\' >> '+str(numxml)+'/hyperesults.txt')
-		for i in range(0,3): #delete headers pasted from hyperesults_bp _cc and _mf
-			os.system('sed 1d '+str(numxml)+'/hyperesults.txt -i')
+		#for i in range(0,3): #delete headers pasted from hyperesults_bp _cc and _mf
+		#	os.system('sed 1d '+str(numxml)+'/hyperesults.txt -i')
 		resultpath=str(numxml) + "/HyperGeoTest_results.tsv" #final results
 		result = open(resultpath,'w')
 		result.write("GO:ID\tGo term\tNumber of hits\tExpected number of hits\tGo level\tP-value\tCorrected p-value\tAspect\n")
@@ -177,16 +177,18 @@ def everygo(compvalues,view,xmlname,Rpath):
 		tempresults.close()
 
 		for line in lines:
+			if("GO:ID" in line):
+				continue
 			result.write(line.replace(";","\t"))
 		result.close()
 
 		#OPTIONNAL GRAPHICAL REPRESENTATION
 		if view:
 			print "Generating grahical representation"
-			os.system("R --vanilla --slave --args "+" "+ str(numxml)+" "+ "HyperGeoTest_results.txt" +" < " + Rpath + "GoView")
+			os.system("R --vanilla --slave --args "+" "+ str(numxml)+" "+ "HyperGeoTest_results.tsv" +" < " + Rpath + "GoView")
 
 		#remove temporary files
-		os.system('rm '+str(numxml)+'/hyperesults* '+str(numxml)+'/go* '+str(numxml)+'/Enrichment_analysis_results.txt')
+		os.system('rm '+str(numxml)+'/hyperesults* '+str(numxml)+'/go* ')
 
 																								
 		
