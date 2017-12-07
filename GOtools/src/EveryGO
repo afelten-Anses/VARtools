@@ -183,7 +183,7 @@ def everygo(compvalues,view,xmlname,Rpath):
 		#OPTIONNAL GRAPHICAL REPRESENTATION
 		if view:
 			print "Generating grahical representation"
-			os.system("R --vanilla --slave --args "+" "+ str(numxml)+" "+ "hyperesults.txt" +" < " + Rpath + "GoView")
+			os.system("R --vanilla --slave --args "+" "+ str(numxml)+" "+ "HyperGeoTest_results.txt" +" < " + Rpath + "GoView")
 
 		#remove temporary files
 		os.system('rm '+str(numxml)+'/hyperesults* '+str(numxml)+'/go* '+str(numxml)+'/Enrichment_analysis_results.txt')
