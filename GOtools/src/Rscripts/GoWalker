@@ -229,7 +229,7 @@ for(i in 1:length(Go_uniq))
 {
   targeted_goterm=toString(Go_uniq[i]) #tostring in order to request value
   #Bro-tip= lower.tail=TRUE because (lower.tail=TRUE)=FALSE in next loop, for obscure reasons
-  pvals[i]<-phyper(length(which(Go_ech==targeted_goterm)),length(which(Go_univ==targeted_goterm)),length(Go_univ[,1]),length(Go_ech[,1]),lower.tail = FALSE) 
+  pvals[i]<-phyper(length(which(Go_ech==targeted_goterm)),length(which(Go_univ==targeted_goterm)),length(Go_univ[,1])-length(which(Go_univ==targeted_goterm)),length(Go_ech[,1]),lower.tail = FALSE) 
 }
 pvals2<-as.vector(pvals)
 pvals_adjusted<-p.adjust(pvals2, method="bonferroni", n=length(pvals))
@@ -276,7 +276,7 @@ capture.output(
     if(length(which(Go_ech==targeted_goterm))!=0) #if go-term is present in sample
     {
 	    col3=as.character(length(which(Go_ech==targeted_goterm)))
-	    col6=as.character(phyper(length(which(Go_ech==targeted_goterm)),length(which(Go_univ==targeted_goterm)),length(Go_univ[,1]),length(Go_ech[,1]),lower.tail = FALSE))
+	    col6=as.character(phyper(length(which(Go_ech==targeted_goterm)),length(which(Go_univ==targeted_goterm)),length(Go_univ[,1])-length(which(Go_univ==targeted_goterm)),length(Go_ech[,1]),lower.tail = FALSE))
 	    cat(targeted_goterm,trm,col3,expectednumberofhits,level,col6,pvals_adjusted[a],sep=";")
 	    cat("\n")
     }
@@ -297,7 +297,7 @@ for(i in 1:length(Go_uniq))
 {
   targeted_goterm=toString(Go_uniq[i]) #tostring in order to request value
   #Bro-tip= lower.tail=TRUE because (lower.tail=TRUE)=FALSE in next loop, for obscure reasons
-  pvals[i]<-phyper(length(which(Go_ech==targeted_goterm)),length(which(Go_univ==targeted_goterm)),length(Go_univ[,1]),length(Go_ech[,1]),lower.tail = FALSE) 
+  pvals[i]<-phyper(length(which(Go_ech==targeted_goterm)),length(which(Go_univ==targeted_goterm)),length(Go_univ[,1])-length(which(Go_univ==targeted_goterm)),length(Go_ech[,1]),lower.tail = FALSE) 
 }
 pvals2<-as.vector(pvals)
 pvals_adjusted<-p.adjust(pvals2, method="bonferroni", n=length(pvals))
@@ -343,7 +343,7 @@ capture.output(
     if(length(which(Go_ech==targeted_goterm))!=0) #if go-term is present in sample
     {
 	    col3=as.character(length(which(Go_ech==targeted_goterm)))
-	    col6=as.character(phyper(length(which(Go_ech==targeted_goterm)),length(which(Go_univ==targeted_goterm)),length(Go_univ[,1]),length(Go_ech[,1]),lower.tail = FALSE))
+	    col6=as.character(phyper(length(which(Go_ech==targeted_goterm)),length(which(Go_univ==targeted_goterm)),length(Go_univ[,1])-length(which(Go_univ==targeted_goterm)),length(Go_ech[,1]),lower.tail = FALSE))
 	    cat(targeted_goterm,trm,col3,expectednumberofhits,level,col6,pvals_adjusted[a],sep=";")
 	    cat("\n")
     }
@@ -364,7 +364,7 @@ for(i in 1:length(Go_uniq))
 {
   targeted_goterm=toString(Go_uniq[i]) #tostring in order to request value
   #Bro-tip= lower.tail=TRUE because (lower.tail=TRUE)=FALSE in next loop, for obscure reasons
-  pvals[i]<-phyper(length(which(Go_ech==targeted_goterm)),length(which(Go_univ==targeted_goterm)),length(Go_univ[,1]),length(Go_ech[,1]),lower.tail = FALSE) 
+  pvals[i]<-phyper(length(which(Go_ech==targeted_goterm)),length(which(Go_univ==targeted_goterm)),length(Go_univ[,1])-length(which(Go_univ==targeted_goterm)),length(Go_ech[,1]),lower.tail = FALSE) 
 }
 pvals2<-as.vector(pvals)
 pvals_adjusted<-p.adjust(pvals2, method="bonferroni", n=length(pvals))
@@ -411,7 +411,7 @@ capture.output(
     if(length(which(Go_ech==targeted_goterm))!=0) #if go-term is present in sample
     {
 	    col3=as.character(length(which(Go_ech==targeted_goterm)))
-	    col6=as.character(phyper(length(which(Go_ech==targeted_goterm)),length(which(Go_univ==targeted_goterm)),length(Go_univ[,1]),length(Go_ech[,1]),lower.tail = FALSE))
+	    col6=as.character(phyper(length(which(Go_ech==targeted_goterm)),length(which(Go_univ==targeted_goterm)),length(Go_univ[,1])-length(which(Go_univ==targeted_goterm)),length(Go_ech[,1]),lower.tail = FALSE))
 	    cat(targeted_goterm,trm,col3,expectednumberofhits,level,col6,pvals_adjusted[a],sep=";")
 	    cat("\n")
 	}
