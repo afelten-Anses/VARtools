@@ -44,6 +44,9 @@ Quick Start
 
 ## Usage (Linux/Mac OS X)
 
+If it's necessary, make all scripts excecutable :
+
+	chmod +x src/*
 
 Add the scripts to your bashrc (/home/username/.bashrc) :
 
