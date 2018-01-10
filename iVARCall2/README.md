@@ -86,25 +86,25 @@ Parameters of each scripts are available with one of its 3 options (example for 
 
 ## iVARCall2 parameters
 
-* -a                    adaptaters FASTA file (REQUIRED)
-* -TRIMJAR              Trimmomatic jar path
-* -GATKJAR              GenomeAnalysisTK jar path
-* -PICARDJAR            picard-tools jar path
-* -o                    output prefix (default:output)
-* -q                    minimum phred score per base for trimming (default:30)
-* -l                    minimum read length for trimming (default:50)
-* -PL                   sequencing plateform for RG line (default:UNKNOWN)
-* -PU                   sequencer ID for RG line (default:UNKNOWN)
-* -LB                   sequencing library (default:UNKNOWN)
-* -T                    maximum number of threads to use (default:1)
-* -m                    maximum memory to use in Mb (default:4000)
+* -a : adaptaters FASTA file (REQUIRED)
+* -TRIMJAR : Trimmomatic jar path
+* -GATKJAR : GenomeAnalysisTK jar path
+* -PICARDJAR : picard-tools jar path
+* -o : output prefix (default:output)
+* -q : minimum phred score per base for trimming (default:30)
+* -l : minimum read length for trimming (default:50)
+* -PL : sequencing plateform for RG line (default:UNKNOWN)
+* -PU : sequencer ID for RG line (default:UNKNOWN)
+* -LB : sequencing library (default:UNKNOWN)
+* -T : maximum number of threads to use (default:1)
+* -m : maximum memory to use in Mb (default:4000)
 
 ## iVARCall2 options
 
-* --removeDuplicates    remove duplicates reads (recommended)
-* --indelRealigner      local realignment around indels (recommended)
-* --removeTmpFiles      remove temporary files (recommended)
-* --onlyVCF             stop process after making independent VCF files
+* --removeDuplicates : remove duplicates reads (recommended)
+* --indelRealigner : local realignment around indels (recommended)
+* --removeTmpFiles : remove temporary files (recommended)
+* --onlyVCF : stop process after making independent VCF files
 
 
 Ouputs
