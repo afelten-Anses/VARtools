@@ -65,10 +65,13 @@ This workflow needs 'BAMmaker', 'VCFtoMATRIX', 'VCFtoFASTA' and 'VCFtoPseudoGeno
 
 ## External dependencies
 
-* [GGplot2]
-* [gridExtra]
-* [biocLite.R]	
-
+* [BWA](http://bio-bwa.sourceforge.net/) - tested with 0.7.12
+* [samtools](http://samtools.sourceforge.net/) - tested with 1.1 
+* [picard-tools](http://broadinstitute.github.io/picard/) - tested with 1.133
+* [Trimmomatic](http://www.usadellab.org/cms/index.php?page=trimmomatic) - tested with 0.33	
+* [GATK](https://software.broadinstitute.org/gatk/) - tested with 3.7.0
+* [vcftools (Vcf.pm)](http://vcftools.sourceforge.net/) - tested with 0.1.12b
+* [pdflatex](https://ctan.org/pkg/pdftex) - tested with 3.14159265-2.6-1.40.16
 
 
 Parameters

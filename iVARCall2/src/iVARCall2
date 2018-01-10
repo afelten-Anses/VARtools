@@ -19,11 +19,7 @@ Do the SNP calling from several FASTQ files
 @requires: picard-tools
 @requires: Trimmomatic
 @requires: GATK
-@requires: SnpSift
 @requires: BAMmaker, iVCFmaker_SNP, iVCFmerge_SNP, VCFilter, VCFtoMATRIX and VCFtoFASTA in $PATH
-@requires: bgzip
-@requires: tabix
-@requires: vcf-merge
 @requires: Vcf.pm (vcftools)
 
 Paired-end reads must be nammed as "prefix_R1.XXXX" and "prefix_R2.XXXX".
