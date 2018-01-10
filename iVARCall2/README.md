@@ -104,7 +104,7 @@ Parameters of each scripts are available with one of its 3 options (example for 
 * --removeDuplicates : remove duplicates reads (recommended)
 * --indelRealigner : local realignment around indels (recommended)
 * --removeTmpFiles : remove temporary files (recommended)
-* --onlyVCF : stop process after making independent VCF files
+* --onlyVCF : stop process after making independent g.vcf files
 
 
 Ouputs
