@@ -1,4 +1,5 @@
-Title: iVARCall2 README
+iVARCall2 README
+================
 
 Authors: Arnaud Felten, Nicolas Radomski
 
@@ -48,7 +49,7 @@ Add the scripts to your bashrc (/home/username/.bashrc) :
 
 	export PATH=$PATH:src/
 	
-Then you can run it as shell commands :
+Then you can run it as shell command :
 
 	iVarCall2
 
@@ -77,6 +78,13 @@ This workflow needs 'BAMmaker', 'VCFtoMATRIX', 'VCFtoFASTA' and 'VCFtoPseudoGeno
 Parameters
 ==========
 
+Parameters of each scripts are available with one of its 3 options (example for iVCFmaker):
+
+	iVCFmaker
+	iVCFmaker -h
+	iVCFmaker --help
+
+## iVARCall2 parameters
 
 
 Ouputs
@@ -84,5 +92,8 @@ Ouputs
 
 
 
-Citation
-========
+Citations
+=========
+
+[A. Felten, M. Vila Nova, K. Durimel, L. Guillier, M. Mistou and N. Radomski. First gene-ontology enrichment analysis based on bacterial coregenome variants: insights into adaptations of Salmonella serovars to mammalian- and avian-hosts. BMC Microbiology, 2017, 17:222.](https://doi.org/10.1186/s12866-017-1132-1)
+
