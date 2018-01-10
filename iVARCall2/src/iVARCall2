@@ -59,10 +59,10 @@ def get_parser():
 						type=str, default='output', help='output prefix (default:output)')
 
 	parser.add_argument('-q', action="store", dest='minQuality', 
-						type=int, default='30', help='min phred score per base for trimming(default:30)')
+						type=int, default='30', help='min phred score per base for trimming (default:30)')
 
 	parser.add_argument('-l', action="store", dest='minLen', 
-						type=int, default='50', help='min read length for trimming(default:50)')
+						type=int, default='50', help='min read length for trimming (default:50)')
 	
 	parser.add_argument('-PL', action="store", dest='PL', 
 						type=str, default='UNKNOWN', help='sequencing plateform for RG line (default:UNKNOWN)')
