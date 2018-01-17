@@ -5,6 +5,7 @@ Authors: Arnaud Felten, Nicolas Radomski
 
 Affiliation: [Food Safety Laboratory – ANSES Maisons Alfort (France)](https://www.anses.fr/en/content/laboratory-food-safety-maisons-alfort-and-boulogne-sur-mer)
 
+You can find the latest version of the tool at [https://github.com/afelten-Anses/VARtools/tree/master/iVARCall2](https://github.com/afelten-Anses/VARtools/tree/master/iVARCall2)
 
 HTML and PDF technical documentation are available in the 'docs/' directory.
 
