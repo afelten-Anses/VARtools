@@ -1,14 +1,14 @@
 VARCall README
 ================
 
-Author: Arnaud Felten, Nicolas Radomski
+Authors: Arnaud Felten, Nicolas Radomski
 
 Affiliation: [Food Safety Laboratory – ANSES Maisons Alfort (France)](https://www.anses.fr/en/content/laboratory-food-safety-maisons-alfort-and-boulogne-sur-mer)
 
 You can find the latest version of the tool at 
 https://github.com/afelten-Anses/VARtools/tree/master/VARCall
 
-ivHTML and pdf user technical documentation are available in the 'docs/' directory.
+HTML and pdf user technical documentation are available in the 'docs/' directory.
 
 
 VARCall workflow

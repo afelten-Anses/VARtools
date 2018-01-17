@@ -1,11 +1,12 @@
-Title: FixedVarTools README
+VARCall README
+================
 
-Author: Arnaud Felten, Nicolas Radomski, Meryl Vila Nova
+Authors: Arnaud Felten, Nicolas Radomski, Meryl Vila Nova
 
 Affiliation: [Food Safety Laboratory – ANSES Maisons Alfort (France)](https://www.anses.fr/en/content/laboratory-food-safety-maisons-alfort-and-boulogne-sur-mer)
 
 You can find the latest version of the tool at 
-https://github.com/afelten-Anses/XXXXXXXXX
+https://github.com/afelten-Anses/VARtools/tree/master/FixedVarTools
 
 HTML and pdf user technical documentation are available in the 'docs/' directory.
 
@@ -69,3 +70,8 @@ The sensitive and specific variants are listed in the XML file with the correspo
 
 The 'phyloFixedVar' script produces also a newick file similar to the input newick file with node labels (nodes id and combinations id).
  
+
+Citations
+=========
+
+[A. Felten, M. Vila Nova, K. Durimel, L. Guillier, M. Mistou and N. Radomski. First gene-ontology enrichment analysis based on bacterial coregenome variants: insights into adaptations of Salmonella serovars to mammalian- and avian-hosts. BMC Microbiology, 2017, 17:222.](https://doi.org/10.1186/s12866-017-1132-1)
