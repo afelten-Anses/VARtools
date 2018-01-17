@@ -114,14 +114,14 @@ Ouputs
 ======
 
 iVARCall2 structures its output in a folder named with the command line argument '-o' ('output' as default). In this folder you can find :
-* - a 'REF' folder which contains a copy of the reference used for the variant calling and its index.
-* - a 'BAM' folder which stocks the final bam file and its bai index for each sample analyzed.
-* - a 'VCF' folder which contains the g.vcf file and its index for each sample and a 'output_SNP_INDEL_filtered.vcf' which results from the merge of all g.vcf files.    
-* - a 'matrix' folder where is stoked 3 differents matrix in tabular separator values format (tsv). This matrix represente the pairwise distance. The matrix 'output_SNP.tsv' is calculated only with the SNP pairwise distance, the matrix 'output_INDEL.tsv' is calculated only with the INDEL pairwise distance and the last 'output_ALL.tsv' matrix combin the both SNPs and InDels distance.
-* - a 'FASTA' folder which stocks fasta files resulted from the concatenation of detected SNPs ('output_SNP.fasta'), detected InDels ('output_INDEL.fasta') and the concatenation of both SNPs and InDels ('output_ALL.fasta'). Furthermore, a 'output_pseudoGenomes.fasta' has been created from the reference genome where SNPs variants are replaced for each sample.    
-* - a 'output_report.pdf' file where different important informations are registered such as iVARCall arguments and parameters, external tools version, references and a trimming and alignment statistic table.
-* - a 'output_statistic.tsv' file where is stocked in tsv format the pdf table.
-* - a log file 'output.log'.   
+* a 'REF' folder which contains a copy of the reference used for the variant calling and its index.
+* a 'BAM' folder which stocks the final bam file and its bai index for each sample analyzed.
+* a 'VCF' folder which contains the g.vcf file and its index for each sample and a 'output_SNP_INDEL_filtered.vcf' file which results from the merge of all g.vcf files.    
+* a 'matrix' folder where is stoked 3 differents matrix in tabular separator values format (tsv). This matrix represente the pairwise distance. The matrix 'output_SNP.tsv' is calculated only with the SNP pairwise distance, the matrix 'output_INDEL.tsv' is calculated only with the INDEL pairwise distance and the last 'output_ALL.tsv' matrix combin the both SNPs and InDels distance.
+* a 'FASTA' folder which stocks fasta files resulted from the concatenation of detected SNPs ('output_SNP.fasta'), detected InDels ('output_INDEL.fasta') and the concatenation of both SNPs and InDels ('output_ALL.fasta'). Furthermore, a 'output_pseudoGenomes.fasta' has been created from the reference genome where SNPs variants are replaced for each sample.    
+* a 'output_report.pdf' file where different important informations are registered such as iVARCall arguments and parameters, external tools version, references and a trimming and alignment statistic table.
+* a 'output_statistic.tsv' file where is stocked in tsv format the pdf table.
+* a log file 'output.log'.   
 
 Note : without the '--removeTmpFiles' option, many others intermediate files are keeping in the output directory. 
 
