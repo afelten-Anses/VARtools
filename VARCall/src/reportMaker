@@ -391,8 +391,14 @@ def main():
 
 	tex.write("\section{References}\n")
 
+	tex.write("A. Felten, M. Vila Nova, K. Durimel, L. Guillier, M. Mistou and N. Radomski. \
+		First gene-ontology enrichment analysis based on bacterial coregenome variants: insights \
+		into adaptations of Salmonella serovars to mammalian- and avian-hosts. BMC Microbiology, \
+		2017, 17:222.")
+	tex.write(" \\\\ \n")
+	tex.write(" \\\\ \n")
 	tex.write("Li H. and Durbin R. (2009) \\textit{Fast and accurate short read alignment with \
-		Burrows-Wheeler Transform.} Bioinformatics, 25:1754-60. [PMID: 19451168]")
+		Burrows-Wheeler Transform.} Bioinformatics, 25:1754-60. [PMID: 19451168]\n")
 	tex.write(" \\\\ \n")
 	tex.write(" \\\\ \n")
 	tex.write("Li H.*, Handsaker B.*, Wysoker A., Fennell T., Ruan J., Homer N., Marth G., \

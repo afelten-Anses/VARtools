@@ -64,7 +64,7 @@ iVARCall2 has been developped with python 2.7 (tested with 2.7.6).
 
 ## Important
 
-This workflow needs 'BAMmaker', 'VCFtoMATRIX', 'VCFtoFASTA' and 'VCFtoPseudoGenome' scripts in your $PATH. This scripts are available in the VARCall/src directory.
+This workflow needs 'BAMmaker', 'VCFtoMATRIX', 'VCFtoFASTA' and 'VCFtoPseudoGenome' scripts in your $PATH. This scripts are available in the VARCall/src directory of the VARtools git repository.
 
 
 ## External dependencies
