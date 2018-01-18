@@ -7,7 +7,7 @@ Affiliation: [Food Safety Laboratory – ANSES Maisons Alfort (France)](https://
 
 You can find the latest version of the tool at [https://github.com/afelten-Anses/VARtools/tree/master/iVARCall2](https://github.com/afelten-Anses/VARtools/tree/master/iVARCall2)
 
-HTML and PDF technical documentation are available in the 'docs/' directory.
+HTML and PDF technical documentations are available in the 'docs/' directory.
 
 
 iVARCall2 workflow
