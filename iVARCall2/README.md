@@ -3,7 +3,7 @@ iVARCall2 README
 
 Authors: Arnaud Felten, Nicolas Radomski
 
-Affiliation: [Food Safety Laboratory – ANSES Maisons Alfort (France)](https://www.anses.fr/en/content/laboratory-food-safety-maisons-alfort-and-boulogne-sur-mer)
+Affiliation: [Food Safety Laboratory - ANSES Maisons Alfort (France)](https://www.anses.fr/en/content/laboratory-food-safety-maisons-alfort-and-boulogne-sur-mer)
 
 You can find the latest version of the tool at [https://github.com/afelten-Anses/VARtools/tree/master/iVARCall2](https://github.com/afelten-Anses/VARtools/tree/master/iVARCall2)
 
@@ -13,9 +13,9 @@ HTML and PDF technical documentations are available in the 'docs/' directory.
 iVARCall2 workflow
 ==================
 
-This workflow called iVARCall2 for "independant variant calling 2" aims to perform the variant calling analysis from Illumina paired-end reads based on the GATK HaplotypeCaller algorithm. Each sample are processing independently and a g.vcf file is produce for each of them. This allow to combin several iVARCall2 results if the same reference genome is used. 
+This workflow called iVARCall2 for "independant variant calling 2" aims to perform the variant calling analysis from Illumina paired-end reads based on the GATK HaplotypeCaller algorithm. Each sample are processed independently and a g.vcf file is produce for each of them. This allows combination of several iVARCall2 results if the same reference genome is used. 
 
-The differents workflow steps and scripts are presented below :
+The different steps and scripts of the workflow are presented below :
 
 ![](workflow.jpg?raw=true "iVARCall2 workflow")
 
@@ -27,11 +27,11 @@ The differents workflow steps and scripts are presented below :
 
 - The script 'iVCFmerge' merge all g.vcf in a single vcf file.
 
-- All variants detected are filered by 'VCFilter' in order to remove variants caused by missing data or due to reference.
+- All detected variants are filtrated by 'VCFilter' in order to remove variants presenting by missing data or only due to reference.
 
-- The script 'VCFtoMATRIX' make 3 distance matrix (SNPs, InDels and SNPs + InDels) from all variants selected by the workflow.
+- The script 'VCFtoMATRIX' produces 3 distance matrices (SNPs, InDels and SNPs + InDels) from all variants selected by the workflow.
 
-- All filered variants are concatenante in a 3 fasta files (SNPs, InDels and SNPs + InDels) by the 'VCFtoFASTA' script. This fasta files can be used to produce a phylogenetic tree.
+- All filtrated variants are concatenated in a 3 fasta files (SNPs, InDels and SNPs + InDels) by the 'VCFtoFASTA' script. These fasta files can be used to produce a phylogenetic tree.
 
 - The 'VCFtoPseudoGenome' script replace for each sample all SNPs in the reference genome in order to obtain a 'PseudoGenome'. For this step, InDels are not included.
 
@@ -82,7 +82,7 @@ This workflow needs 'BAMmaker', 'VCFtoMATRIX', 'VCFtoFASTA' and 'VCFtoPseudoGeno
 Parameters
 ==========
 
-Parameters of each scripts are available with one of its 3 options (example for iVCFmaker):
+Parameters of each scripts are available using the option below (example for iVCFmaker):
 
 	iVCFmaker
 	iVCFmaker -h
@@ -105,7 +105,7 @@ Parameters of each scripts are available with one of its 3 options (example for 
 
 ## iVARCall2 options
 
-* --removeDuplicates : remove duplicates reads (recommended)
+* --removeDuplicates : remove duplicated regions of the chromosome (recommended)
 * --indelRealigner : local realignment around indels (recommended)
 * --removeTmpFiles : remove temporary files (recommended)
 * --onlyVCF : stop process after making independent g.vcf files
@@ -116,15 +116,15 @@ Ouputs
 
 iVARCall2 structures its output in a folder named with the command line argument '-o' ('output' as default). In this folder you can find :
 * a 'REF' folder which contains a copy of the reference used for the variant calling and its index.
-* a 'BAM' folder which stocks the final bam file and its bai index for each sample analyzed.
+* a 'BAM' folder which stocks the final bam file and its bai index for each analyzed sample.
 * a 'VCF' folder which contains the g.vcf file and its index for each sample and a 'output_SNP_INDEL_filtered.vcf' file which results from the merge of all g.vcf files.    
-* a 'matrix' folder where is stoked 3 differents matrix in tabular separator values format (tsv). This matrix represente the pairwise distance. The matrix 'output_SNP.tsv' is calculated only with the SNP pairwise distance, the matrix 'output_INDEL.tsv' is calculated only with the INDEL pairwise distance and the last 'output_ALL.tsv' matrix combin the both SNPs and InDels distance.
-* a 'FASTA' folder which stocks fasta files resulted from the concatenation of detected SNPs ('output_SNP.fasta'), detected InDels ('output_INDEL.fasta') and the concatenation of both SNPs and InDels ('output_ALL.fasta'). Furthermore, a 'output_pseudoGenomes.fasta' has been created from the reference genome where SNPs variants are replaced for each sample.    
-* a 'output_report.pdf' file where different important informations are registered such as iVARCall arguments and parameters, external tools version, references and a trimming and alignment statistic table.
-* a 'output_statistic.tsv' file where is stocked in tsv format the pdf table.
+* a 'matrix' folder where 3 different matrices are stored in tabular separator values format (tsv). These matrices represente the pairwise distances. The matrix 'output_SNP.tsv' is calculated only with the SNP pairwise distance, the matrix 'output_INDEL.tsv' is calculated only with the INDEL pairwise distance and the last 'output_ALL.tsv' matrix combines both SNPs and InDels distance.
+* a 'FASTA' folder which stores fasta files resulting from the concatenation of detected SNPs ('output_SNP.fasta'), detected InDels ('output_INDEL.fasta') and the concatenation of both SNPs and InDels ('output_ALL.fasta'). Furthermore, a 'output_pseudoGenomes.fasta' has been created from the reference genome where SNPs variants are replaced for each sample.    
+* a 'output_report.pdf' file where different important informations are registered such as iVARCall arguments and parameters, version of external tools, reference, as well as statistic table about trimming and alignment.
+* a 'output_statistic.tsv' file where the pdf table is stocked in tsv format.
 * a log file 'output.log'.   
 
-Note : without the '--removeTmpFiles' option, many others intermediate files are keeping in the output directory. 
+Note : without the '--removeTmpFiles' option, many others intermediate files are kept in the output directory. 
 
 Citations
 =========
