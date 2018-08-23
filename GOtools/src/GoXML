@@ -6,6 +6,7 @@ import uuid           				#uuid filename format
 import urllib,urllib2,requests		#html requests
 from lxml import etree 				#xml parser
 import xml.etree.ElementTree as ET 	#xml parser ElemenTree only
+import re #regex
 
 __doc__="""
 GoXML workfow + GOslimmer_xml wrapper. In order to add GO-terms from a XML file and generate a non-enriched universe of GO-terms.
@@ -288,7 +289,6 @@ def UNIPROTtoGO(path,output,protlist,dicoGO,GOFile,GO_prok): #Uniprot to GO ids 
 	#counter initialisation
 	t0=time.time()
 	nb3=0
-	tsvname="annotation"+str(uuid.uuid4())+".tsv"
 	#/counter initialisation
 	filename=str(output)+".xml" #filename: name of XML output that will contain GO-informations
 	outputFile = open(filename, "w") #see above
@@ -341,26 +341,26 @@ def UNIPROTtoGO(path,output,protlist,dicoGO,GOFile,GO_prok): #Uniprot to GO ids 
 							goDOMAIN=etree.SubElement(go,"DOMAIN")
 							goDESCRIPTION=etree.SubElement(go,"DESCRIPTION")
 							#Markups initialisation :end
-							#term=term.split()#term=GO id + GO domain + GO description(format DESCRIPTION_word1 DESCRIPTION_word2 DESCRIPTION_wordn..)
-							#split by "|"" in order to recognize these 3 categories
-							#interm=str(term[0:]).split('|') 
 							interm=term.split('|')
 							#Some magic in order to have a clean ouput: start
 							goID.text=str(interm[0]).replace("['","")
+							goDOMAIN.text="-" # Deprecated. Juste write "-" to preserve XML backward compatibility
+							goDESCRIPTION.text="-" # Deprecated. Juste write "-" to preserve XML backward compatibility
 							
 
 							if len(interm)>1 :
 
-								goDOMAIN.text=str(interm[1]).rstrip('\n')
-								if "Component" in goDOMAIN.text:	# GO domain
-									goDOMAIN.text="Cellular Component"
-								elif "Function" in goDOMAIN.text:
-									goDOMAIN.text="Molecular Function"
-								elif "Process" in goDOMAIN.text:
-									goDOMAIN.text="Biological Process"
-								goDESCRIPTION.text=str(' '.join(interm[2:])).rstrip("']'")
-								goDESCRIPTION.text=str(goDESCRIPTION.text).replace("'","")
-								goDESCRIPTION.text=str(goDESCRIPTION.text).replace(",","")
+								# goDOMAIN.text=str(interm[1]).rstrip('\n')
+								# if "Component" in goDOMAIN.text:	# GO domain
+								# 	goDOMAIN.text="Cellular Component"
+								# elif "Function" in goDOMAIN.text:
+								# 	goDOMAIN.text="Molecular Function"
+								# elif "Process" in goDOMAIN.text:
+								# 	goDOMAIN.text="Biological Process"
+								# goDESCRIPTION.text=str(' '.join(interm[2:])).rstrip("']'")
+								# goDESCRIPTION.text=str(goDESCRIPTION.text).replace("'","")
+								# goDESCRIPTION.text=str(goDESCRIPTION.text).replace(",","")
+
 								#Some magic in order to have a clean ouput: end
 								for term in termsproklist:
 									if goID.text in term: #if goID is proka term
@@ -380,39 +380,36 @@ def UNIPROTtoGO(path,output,protlist,dicoGO,GOFile,GO_prok): #Uniprot to GO ids 
 						while goterm==None:
 
 							try:
-								url="http://www.ebi.ac.uk/QuickGO-Old/GAnnotation?protein="+str(protlist[i])+"&col=goID,aspect,goName&format=tsv"
-								tsv = requests.get(url, verify=True)
+								url='https://www.ebi.ac.uk/QuickGO/services/annotation/downloadSearch?geneProductId='+str(protlist[i])
+								res = requests.get(url, headers={ "Accept" : "text/tsv"}, verify=True)
+								res_text = r.text
+								goterms = re.findall(r'\bGO:\d+',res_text) # re.findall returns a list of GO ids strings
 
-								with open(tsvname,'w') as addtmp:
-									addtmp.write(tsv.text) #write content from request
+								# with open(tsvname,'w') as addtmp:
+								# 	addtmp.write(tsv.text) #write content from request
 
-								with open(tsvname,'r') as sourcetmp:
-									lignestmp=sourcetmp.readlines() #read content from request
+								# with open(tsvname,'r') as sourcetmp:
+								# 	lignestmp=sourcetmp.readlines() #read content from request
 
-									for goterm in lignestmp:
-
-										#split format: GOid_GOaspect_GOdescription
-										goterm=goterm.split() 
+									for goterm in goterms:
 										
-										if goterm[0] not in dicogo.keys() and goterm[0]!="GO": #avoid GOterms clones (for a same positon) and wrong values										
-											#Markups initialisation :start
-											go=etree.SubElement(golist,"GO")
-											goID=etree.SubElement(go,"ID")
-											goDOMAIN=etree.SubElement(go,"DOMAIN")
-											goDESCRIPTION=etree.SubElement(go,"DESCRIPTION")
-											#Markups initialisation :end
+										if goterm not in dicogo.keys() and goterm!="GO": # Avoid GOterms clones (for a same positon) and wrong values										
+											# Initialize XML DOM with new markups
+											go = etree.SubElement(golist,"GO")
+											goID = etree.SubElement(go,"ID")
+											goDOMAIN = etree.SubElement(go,"DOMAIN")
+											goDESCRIPTION = etree.SubElement(go,"DESCRIPTION")
+											goID.text = goterm	# GO id
+											goDOMAIN.text="na" # Deprecated. Juste write "na" to preserve XML backward compatibility
+											goDESCRIPTION.text="na" # Deprecated. Juste write "na" to preserve XML backward compatibility
+											# if "Component" in str(goterm[1]).rstrip('\n'):	# GO domain
+											# 	goDOMAIN.text="Cellular Component"
+											# elif "Function" in str(goterm[1]).rstrip('\n'):
+											# 	goDOMAIN.text="Molecular Function"
+											# elif "Process" in str(goterm[1]).rstrip('\n'):
+											# 	goDOMAIN.text="Biological Process"
 
-											#output formating: start
-											goID.text=str(goterm[0]).rstrip('\n') 			 #GO id
-
-											if "Component" in str(goterm[1]).rstrip('\n'):	# GO domain
-												goDOMAIN.text="Cellular Component"
-											elif "Function" in str(goterm[1]).rstrip('\n'):
-												goDOMAIN.text="Molecular Function"
-											elif "Process" in str(goterm[1]).rstrip('\n'):
-												goDOMAIN.text="Biological Process"
-
-											goDESCRIPTION.text=str(' '.join(goterm[2:])) 	#GO description (Join all words)
+											# goDESCRIPTION.text=str(' '.join(goterm[2:])) 	#GO description (Join all words)
 											#output formating: end
 
 											#ADD PROKA TERMS ONLY IN XML
@@ -420,10 +417,10 @@ def UNIPROTtoGO(path,output,protlist,dicoGO,GOFile,GO_prok): #Uniprot to GO ids 
 												if goID.text in term: #if goID is proka term
 													region.insert(4,golist) # write at a deepness value of 3 in regard to <region>
 													#go3in1 format GOid | GO_aspect | GO_description(n) --> this is the GO-EBI_databases.tsv format
-													go3in1=str(goterm[0]) +'|' + str(goterm[1]) +'|'+ str(' '.join(goterm[2:]))
+													go3in1=str(goterm) +'|' + str("na") +'|'+ str("na")  # "na" and "na" to keep backward compatibility
 												
 													#if goterm exists, store in dicogo in order to control duplicates for next go-terms IN THIS CURRENT TSV FILE 
-													if goterm[0]!='':
+													if goterm != '':
 														dicogo[go3in1]=protlist[i]	
 												del term #clear term from RAM
 
@@ -457,11 +454,8 @@ def UNIPROTtoGO(path,output,protlist,dicoGO,GOFile,GO_prok): #Uniprot to GO ids 
 
 	#After all XML ebuilding, write the new XML in output file
 	print "\nWriting new XML"		
-	#REMARQUE: l'écriture du nouveau XML requiert en RAM beaucoup plus que sa taille finale
-	outputFile.write(etree.tostring(root,pretty_print=True))
+	outputFile.write(etree.tostring(root,pretty_print=True)) # this step requieres a way more ram than the XML final size.
 	outputFile.close()	
-	if os.path.exists(tsvname):
-		os.system('rm '+str(tsvname))
 	print "--> ok: processed in ",int(time.time()-t0)," seconds"		
 
 
