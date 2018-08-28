@@ -60,6 +60,7 @@ them. This allows combination of several iVARCall2 results if the same reference
 <br/>
 
 <img src="https://github.com/afelten-Anses/VARtools/blob/master/sepbar.png" alt="sepbar"/>
+
 Citations
 =========
 
