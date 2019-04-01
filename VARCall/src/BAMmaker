@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/global/conda/envs/vartool_env/bin/python
 # -*- coding: iso-8859-1 -*-
 import os, sys, time
 import argparse
@@ -33,14 +33,14 @@ def get_parser():
 	parser.add_argument('-reads', action="store", dest='reads', 
 						type=str, required=True, nargs='+', help='single-end reads FASTQ file or paired-end reads FASTQ files (REQUIRED)')
 
-	parser.add_argument('-TRIMJAR', action="store", dest='TRIMJAR', 
-						type=str, default='/opt/Trimmomatic/0.33/trimmomatic-0.33.jar', help='Trimmomatic jar path') #required=True
+#	parser.add_argument('-TRIMJAR', action="store", dest='TRIMJAR', 
+#						type=str, default='/opt/Trimmomatic/0.33/trimmomatic-0.33.jar', help='Trimmomatic jar path') #required=True
 
 	parser.add_argument('-GATKJAR', action="store", dest='GATKJAR', 
-						type=str, default='/opt/GATK/3.4.0/GenomeAnalysisTK.jar', help='GenomeAnalysisTK jar path') #required=True
+						type=str, help='GenomeAnalysisTK jar path') #required=True
 
-	parser.add_argument('-PICARDJAR', action="store", dest='PICARDJAR', 
-						type=str, default='/opt/picard-tools/1.133/picard.jar', help='picard-tools jar path') #required=True
+#	parser.add_argument('-PICARDJAR', action="store", dest='PICARDJAR', 
+#						type=str, default='/opt/picard-tools/1.133/picard.jar', help='picard-tools jar path') #required=True
 
 	parser.add_argument('-o', action="store", dest='output', 
 						type=str, default='output', help='output name (default:output)')
@@ -314,6 +314,7 @@ def main():
 	##bwa index
 	if not exist(Arguments.refFASTA + ".bwt"):
 		command = ["bwa", "index", "-a", "is", Arguments.refFASTA]
+		print(" ".join(command))
 		os.system(" ".join(command))
 	else :
 		print Arguments.refFASTA + ".bwt already exist!" 
@@ -321,18 +322,21 @@ def main():
 	##fasta index
 	if not exist(Arguments.refFASTA + ".fai"):
 		command = ["samtools", "faidx", Arguments.refFASTA]
+		print(" ".join(command))
 		os.system(" ".join(command))
 	else :
 		print Arguments.refFASTA + ".fai already exist!"	
 
 		
 	##sequence dictionnary
-	outDicName = Arguments.refFASTA.split(".")[0] + ".dict"
+        outDicName = os.path.abspath(os.path.join(os.path.dirname(Arguments.refFASTA),os.path.basename(Arguments.refFASTA).split(".")[0] + ".dict"))
+
 
 	#if not exist(outDicName):
-	l=["java -Xmx4g -jar ", Arguments.PICARDJAR, "CreateSequenceDictionary", "REFERENCE=" + Arguments.refFASTA, \
+	l=["picard ",Xmx, " CreateSequenceDictionary", "REFERENCE=" + Arguments.refFASTA, \
 		"OUTPUT=" + outDicName]
 	l=" ".join(l)
+	print(" ".join(l))
 	os.system(l)	
 
 	#else :
@@ -376,7 +380,7 @@ def main():
 	##paired-end
 	if(len(Arguments.reads)>1):
 
-		command = ["java -Xmx4g -jar ", Arguments.TRIMJAR, "PE", "-threads", str(Arguments.nbThreads), \
+		command = ["trimmomatic ",Xmx, " PE", "-threads", str(Arguments.nbThreads), \
 			"-phred" + '33', Arguments.reads[0], Arguments.reads[1], \
 			Arguments.output + "_forward_paired.fq.gz", Arguments.output + "_forward_unpaired.fq.gz", \
 			Arguments.output + "_reverse_paired.fq.gz", Arguments.output + "_reverse_unpaired.fq.gz"]
@@ -395,7 +399,7 @@ def main():
 	##single-end	
 	else :
 	
-		command = ["java -Xmx4g -jar ", Arguments.TRIMJAR, "SE", "-threads", str(Arguments.nbThreads), \
+		command = ["trimmomatic ",Xmx," SE", "-threads", str(Arguments.nbThreads), \
 			"-phred" + '33', Arguments.reads[0], Arguments.output + ".fq.gz"]
 
 		if Arguments.adaptaters :
@@ -480,7 +484,7 @@ def main():
 	memoryPerThreads = Arguments.maxMemory / Arguments.nbThreads
 
 	command = ["samtools", "sort", "-m", str(memoryPerThreads) + "M", "-@", str(Arguments.nbThreads), \
-		Arguments.output + ".bam", Arguments.output + "_sorted"]
+		"-o",Arguments.output + "_sorted.bam", Arguments.output + ".bam"]
 	os.system(' '.join(command))
 
 	command = ["samtools", "index", Arguments.output + "_sorted.bam"]
@@ -516,12 +520,12 @@ def main():
 		#Removing duplicates 
 		print "--> Remove duplicates\n"
 
-		command = ["java -Xmx4g -jar ", Arguments.PICARDJAR, "MarkDuplicates", "INPUT=" + Arguments.output + "_sorted.bam", \
+		command = ["picard ",Xmx,"MarkDuplicates", "INPUT=" + Arguments.output + "_sorted.bam", \
 			"OUTPUT=" + Arguments.output + "_removedup.bam", "VALIDATION_STRINGENCY=LENIENT", \
 			"METRICS_FILE=" + Arguments.output + "_removedup_metrics.txt", "REMOVE_DUPLICATES=true"]
 		os.system(' '.join(command))
 		
-		command = ["java -Xmx4g -jar ", Arguments.PICARDJAR,"BuildBamIndex", "VALIDATION_STRINGENCY=LENIENT", "INPUT=" + Arguments.output + "_removedup.bam"]
+		command = ["picard ",Xmx,"BuildBamIndex", "VALIDATION_STRINGENCY=LENIENT", "INPUT=" + Arguments.output + "_removedup.bam"]
 		os.system(' '.join(command))
 
 		output_BAMFile = Arguments.output + "_removedup.bam"
@@ -536,7 +540,8 @@ def main():
 
 		cmds = []
 		
-		cmds.append(["java -Xmx4g -jar ", Arguments.GATKJAR, "-T RealignerTargetCreator", "-R", Arguments.refFASTA, \
+		cmds.append(["java ",Xmx,"-jar ",Arguments.GATKJAR, \
+			"-T RealignerTargetCreator", "-R", Arguments.refFASTA, \
 			"-I", output_BAMFile, "-o", Arguments.output + "_forIndelRealigner.intervals"\
 			, "-nt ", str(Arguments.nbThreads)\
 			])
@@ -547,12 +552,14 @@ def main():
 		cmds = []
 
 		if("removedup" in output_BAMFile):
-			modified_output = output_BAMFile.split(".")[0] + "_realigned.bam"
+			modified_output = os.path.abspath(os.path.join(os.path.dirname(Arguments.output),os.path.basename(Arguments.output)+"_removedup_realigned.bam"))
 		else :	
 			#modified_output = output_BAMFile.split("_")[0] + "_realigned.bam"
-			modified_output = '_'.join(output_BAMFile.split("_")[0:-1]) + "_realigned.bam"
+			#modified_output = '_'.join(output_BAMFile.split("_")[0:-1]) + "_realigned.bam"
+			modified_output = os.path.abspath(os.path.join(os.path.dirname(Arguments.output),os.path.basename(Arguments.output)+"_realigned.bam"))
 
-		cmds.append(["java -Xmx4g -jar ", Arguments.GATKJAR, "-T IndelRealigner", "-R", Arguments.refFASTA, \
+		cmds.append(["java",Xmx," -jar",Arguments.GATKJAR, \
+			"-T IndelRealigner", "-R", Arguments.refFASTA, \
 			"-I", output_BAMFile, "-targetIntervals", Arguments.output + "_forIndelRealigner.intervals", \
 			"-o", modified_output])
 		cmdSyst = " ".join(cmds[0])

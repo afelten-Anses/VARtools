@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 # -*- coding: iso-8859-1 -*-
 import os, sys, time
 import argparse
@@ -108,7 +108,7 @@ def main():
 	print "--> InDel calling indel...\n"
 	cmds = []
 
-	cmds.append(["java",Xmx, "-jar", Arguments.GATKJAR, \
+	cmds.append(["gatk --java-options '",Xmx,"' " , \
 		"-R", Arguments.refFASTA, \
 		"-T", "UnifiedGenotyper", \
 		"-o", Arguments.output + "_InDel_raw.vcf", "-ndrs", \
@@ -135,7 +135,7 @@ def main():
 	print "--> InDel filtration...\n"
 	cmds = []
 
-	cmds.append(["java",Xmx, "-jar", Arguments.GATKJAR, \
+	cmds.append(["gatk --java-options '",Xmx,"' " , \
 		"-R", Arguments.refFASTA, \
 		"-T", "VariantFiltration", "-ndrs", \
 		"-o", Arguments.output + "_InDel_flag.vcf", \
@@ -165,7 +165,7 @@ def main():
 	print "--> hard filtering...\n"
 	cmds = []
 
-	cmds.append(["java",Xmx, "-jar", Arguments.GATKJAR, \
+	cmds.append(["gatk --java-options '",Xmx,"' " , \
 		"-R", Arguments.refFASTA, \
 		"-T", "SelectVariants", "-ndrs", \
 		"--variant", Arguments.output + "_InDel_flag.vcf", \
@@ -182,7 +182,7 @@ def main():
 
 	#variants metrics
 
-	cmds.append(["java",Xmx, "-jar", Arguments.GATKJAR, \
+	cmds.append(["gatk --java-options '",Xmx,"' " , \
 		"-T", "VariantEval", "-ndrs", \
 		"-R", Arguments.refFASTA, \
 		"-o", Arguments.output + "_InDel_filtrated.txt", \

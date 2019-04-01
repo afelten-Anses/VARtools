@@ -1,0 +1,121 @@
+#!/usr/bin/env python
+# -*- coding: iso-8859-1 -*-
+import os, sys
+import argparse
+
+
+__doc__="""
+
+"""
+
+def get_parser():
+	"""
+	Parse arguments
+	@return: arguments list
+	@rtype: parser object
+	"""
+
+	parser = argparse.ArgumentParser(description='From a VCF, remove recombination position detected with ClonalFrameML')
+
+	parser.add_argument('-v', action="store", dest='VCF',
+						type=str, required=True, help='VCF file (REQUIRED)')
+
+	parser.add_argument('-c', action="store", dest='CLONAL',
+						type=str, required=True, help='ClonalFrameML status file  (REQUIRED)')
+
+	parser.add_argument('-o', action="store", dest='output',
+						type=str, required=True, help='output prefix (default:output)')
+
+	parser.add_argument('-m', action="store", dest='minRecombination', 
+						type=int, default=400, help='minimum recombination length (default:400)')
+
+	return parser
+
+
+
+def ClonalFrameMl_reader(ClonalFile, minRecombination):
+
+	Cfile = open(ClonalFile, 'r')
+	lines = Cfile.readlines()
+
+	listPos = []
+	flag = True
+
+	for line in lines :
+
+		#print line
+
+		if flag :
+			flag = False
+			continue
+
+		start = int(line.split('\t')[1])	
+		end = int(line.split('\t')[2])
+
+		if (end - start) > minRecombination :
+
+			listPos.append([start, end])
+
+	return 	listPos	
+
+
+
+def VCFilter(vcf_file, vcf_out, listPos):
+
+	vcf = open(vcf_file,'r')
+	lines = vcf.readlines()
+
+	output = open(vcf_out + '_ClonalFiltrated.vcf', 'w')
+	output2 = open(vcf_out + '_trash.vcf', 'w')
+
+	for line in lines :
+
+		if(line[0] == '#'):
+			output.write(line)
+			output2.write(line)
+
+		else:
+
+			pos = int(line.split('\t')[1])
+
+			flag = True
+
+			for element in listPos :
+				if pos >= element[0] and pos <= element[1] :
+					flag = False
+					output2.write(line)
+					break
+
+			if flag :
+				output.write(line)			
+
+	output.close()
+	output2.close()
+
+
+#main function	
+def main():	
+
+	
+	# Get arguments 
+	parser=get_parser()
+	
+	# Print parser.help if no arguments
+	if len(sys.argv)==1:
+		parser.print_help()
+		sys.exit(1)
+	
+	Arguments=parser.parse_args()	
+
+
+	listPos = ClonalFrameMl_reader(Arguments.CLONAL, Arguments.minRecombination)
+
+	print len(listPos)
+
+	VCFilter(Arguments.VCF, Arguments.output, listPos)
+
+
+
+
+if __name__ == "__main__":
+	main()		

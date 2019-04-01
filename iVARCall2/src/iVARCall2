@@ -1,6 +1,8 @@
-#!/usr/bin/python
+#!/global/conda/envs/artwork/bin/python
 # -*- coding: iso-8859-1 -*-
-import os, sys
+
+
+import os, sys, re
 import datetime
 import time
 from time import *
@@ -46,14 +48,13 @@ def get_parser():
 	parser.add_argument('-a', action="store", dest='adaptaters', 
 						type=str, required=True, default=None, help='adaptaters FASTA file (REQUIRED)')
 
-	parser.add_argument('-TRIMJAR', action="store", dest='TRIMJAR', 
-						type=str, default='/opt/Trimmomatic/0.33/trimmomatic-0.33.jar', help='Trimmomatic jar path') #required=True
+#	parser.add_argument('-TRIMJAR', action="store", dest='TRIMJAR', 
+#						type=str, default='/opt/Trimmomatic/0.33/trimmomatic-0.33.jar', help='Trimmomatic jar path') #required=True
 
-	parser.add_argument('-GATKJAR', action="store", dest='GATKJAR', 
-						type=str, default='/opt/GATK/3.7.0/GenomeAnalysisTK.jar', help='GenomeAnalysisTK jar path') #required=True
+	parser.add_argument('-GATKJAR', action="store", dest='GATKJAR', type=str, help='GenomeAnalysisTK jar path') #required=True
 
-	parser.add_argument('-PICARDJAR', action="store", dest='PICARDJAR', 
-						type=str, default='/opt/picard-tools/1.133/picard.jar', help='picard-tools jar path') #required=True
+#	parser.add_argument('-PICARDJAR', action="store", dest='PICARDJAR', 
+#						type=str, default='/opt/picard-tools/1.133/picard.jar', help='picard-tools jar path') #required=True
 
 	parser.add_argument('-o', action="store", dest='output', 
 						type=str, default='output', help='output prefix (default:output)')
@@ -86,9 +87,53 @@ def get_parser():
 	parser.add_argument('--removeTmpFiles', dest='removeTmpFiles', action='store_true', help='remove temporary files (default:False)', default=False)
 
 	parser.add_argument('--onlyVCF', dest='onlyVCF', action='store_true', help='stop process after making independent VCF files (default:False)', default=False)
+	
+	parser.add_argument('--slurm', dest='slurm', action='store_true', help='Jobs will be dispatched on a slurm queue instead of running locally. (default:False)', default=False)
+	parser.add_argument('--slurmQueue', dest='slurmQueue', action='store', help='Slurm queue to run the jobs.',default="")
 
 
 	return parser
+
+def slurm_batch(name,cmd,Arguments,dependencies="",conda_env="artwork",threads=0,sync=0,mem=0 ):
+	#print(Arguments.output)
+	#print(os.getcwd())
+	with open(Arguments.output+"/iVARCall2_"+name+"_"+Arguments.output+".sh","w", buffering=0) as file:
+		file.write("#!/bin/bash\n")
+		file.write("#SBATCH -J iVARCall2_"+name+"_"+Arguments.output+"\n")
+		if mem!=0:
+                        file.write("#SBATCH --mem="+str(mem)+"\n")
+		if sync!=0:
+                        file.write("#SBATCH -W\n")
+		if threads==0:
+			file.write("#SBATCH --cpus-per-task="+str(Arguments.nbThreads)+"\n")
+		elif threads>=0:
+			 file.write("#SBATCH --cpus-per-task="+str(threads)+"\n")
+		else:
+			file.write("#SBATCH --cpus-per-task=1\n")
+		file.write("#SBATCH -o %x.%N.%j.out"+"\n")
+		file.write("#SBATCH -e %x.%N.%j.err"+"\n")
+		if Arguments.slurmQueue != "":
+			file.write("#SBATCH -p "+str(Arguments.slurmQueue)+"\n")
+		if conda_env:
+			file.write("source /global/conda/bin/activate\nconda activate\nconda activate "+str(conda_env)+"\n\n")
+		file.write("\n")
+		file.write(str(cmd)+"\n")
+		file.flush()
+		file.close()
+	slurm_cmd=['sbatch ', dependencies, " "+os.getcwd()+"/"+Arguments.output+"/iVARCall2_"+name+"_"+Arguments.output+".sh"]
+	os.system("echo "+"".join(slurm_cmd) +" >> " + Arguments.output + "/" + Arguments.output + ".log" )
+	print("".join(slurm_cmd))
+	#return(re.findall(r'\d+',subprocess.check_output(['ls', '-l'])))
+	return(re.findall(r'\d+',subprocess.check_output("".join(slurm_cmd), shell=True))[0])
+
+
+
+#def slurm_sync(name,cmd,Arguments,dependencies="",conda_env="artwork",threads=0):
+#	slurm_cmd="srun -J iVARCall2_"+name+"_"+Arguments.output+" -o %x.%N.%j.out -e %x.%N.%j.err "+str(dependencies)+" "+str(cmd)
+#	if threads!=0:
+#                   slurm_cmd=slurm_cmd+" "+"--cpus-per-task="+str(threads)
+#	os.system("echo "+slurm_cmd +" >> " + Arguments.output + "/" + Arguments.output + ".log")
+#	subprocess.check_output(slurm_cmd, shell=True)
 
 
 def checkPE(readsList):
@@ -161,7 +206,7 @@ def commandLaunched(Arguments, logFile):
 	@type logFile: string
 	"""
 
-	os.system("echo iVarCall >> " + logFile )
+	os.system("echo iVarCall2 >> " + logFile )
 	os.system("echo " + "-ref " + Arguments.refFASTA + " >> " + logFile )
 	os.system("echo " + "-reads " + " ".join(Arguments.reads) + " >> " + logFile )
 	os.system("echo " + "-ref " + Arguments.refFASTA + " >> " + logFile )
@@ -198,6 +243,13 @@ def main():
 	
 	Arguments=parser.parse_args()
 
+	if not Arguments.GATKJAR:
+                gatk_path=os.path.join(os.environ['CONDA_PREFIX'],"bin","GenomeAnalysisTK.jar")
+        else:
+                gatk_path=Arguments.GATKJAR
+
+
+
 	fileList = copy.copy(Arguments.reads)
 	fileList.append(Arguments.refFASTA)
 	fileList.append(Arguments.adaptaters)
@@ -232,12 +284,14 @@ def main():
 	os.system("mkdir " + Arguments.output + "/REF")
 	new_Ref = Arguments.output + "/REF/reference.fasta"
 	copyfile(Arguments.refFASTA, new_Ref)
-	Arguments.refFASTA = new_Ref
+	Arguments.refFASTA = os.path.abspath(new_Ref)
 
 
 	#for each PE/SE reads
 
-	i = 1	
+	i = 1
+	slurm_batch_BAM = []
+	slurm_batch_VCF = []	
 	bamFiles = []
 	vcfFiles = []
 	for reads in readsList :
@@ -248,8 +302,8 @@ def main():
 			r1 = reads 
 
 		outputName = r1.split("/")[-1]
+		print(outputName)
 		outputName = outputName.split(".")[-2]	
-
 		if("_R1" in outputName):
 			outputName = outputName.replace("_R1","")
 		if("_1." in outputName):
@@ -262,14 +316,16 @@ def main():
 		print "     - make BAM for " + outputName
 		outputName_sample = outputName
 
-		outputName = Arguments.output + "/BAM/" + outputName	
+		outputName = os.path.abspath(Arguments.output + "/BAM/" + outputName)
 		
-		cmd = ["BAMmaker" , "-ref" , Arguments.refFASTA , "-reads" , reads , "-TRIMJAR" , \
-			Arguments.TRIMJAR , "-GATKJAR" , Arguments.GATKJAR , "-PICARDJAR" , Arguments.PICARDJAR , \
+		cmd = ["BAMmaker" , "-ref" , Arguments.refFASTA , "-reads" , reads ,  \
 			"-o" , outputName , "-q" + str(Arguments.minQuality) , \
 			"-l" , str(Arguments.minLen), "-PL" , Arguments.PL , \
 			"-PU" , str(Arguments.PU) , "-LB" , Arguments.LB , "-T" ,  str(Arguments.nbThreads) , \
-			"-m " + str(Arguments.maxMemory)]	
+			"-m " + str(Arguments.maxMemory), \
+			"-GATKJAR "+ gatk_path \
+			]
+
 
 		if(Arguments.adaptaters):
 			cmd.append(" -a " + Arguments.adaptaters)	
@@ -282,8 +338,11 @@ def main():
 
 
 		os.system("echo " + " ".join(cmd) + " >> " + logFile)
+		if not Arguments.slurm:
+                        os.system(" ".join(cmd) + " >> " + logFile + " 2>&1")
+                else:
+			slurm_batch_BAM.append(slurm_batch("BAM_"+str(outputName_sample)," ".join(cmd),Arguments))
 
-		os.system(" ".join(cmd) + ">> " + logFile + " 2>&1")
 
 		outputName_old = outputName		
 
@@ -303,21 +362,25 @@ def main():
 
 		print "     - make VCF for " + outputName_sample
 
-		outputName_sample = Arguments.output + "/VCF/" + outputName_sample
+		#outputName_sample = Arguments.output + "/VCF/" + outputName_sample
 
-		cmd = ["iVCFmaker", "-ref" , Arguments.refFASTA , "-b", outputName, "-o", \
-		outputName_sample, "-m " + str(Arguments.maxMemory), \
-		"-T", str(Arguments.nbThreads), "-GATKJAR", Arguments.GATKJAR]	
+		cmd = ["iVCFmaker", "-ref" , Arguments.refFASTA , "-b", outputName, "-o",  Arguments.output + "/VCF/" + outputName_sample, "-m " + str(Arguments.maxMemory), \
+		"-T", str(Arguments.nbThreads), \
+		"-GATKJAR "+ gatk_path \
+		]	
 
-		vcfFiles.append(outputName_sample + ".g.vcf")
+		vcfFiles.append( os.path.abspath(Arguments.output + "/VCF/" + outputName_sample + ".g.vcf"))
 	
 		os.system("echo " + " ".join(cmd) + " >> " + logFile)
-	
-		os.system(" ".join(cmd) + " >> " + logFile + " 2>&1")	
-
+		if not Arguments.slurm:
+			os.system(" ".join(cmd) + " >> " + logFile + " 2>&1")	
+		else:
+			slurm_batch_VCF.append(slurm_batch("VCFmaker_"+str(outputName_sample)," ".join(cmd),Arguments,dependencies=" --dependency=afterok:"+"".join(slurm_batch_BAM[-1])))
 
 	if Arguments.onlyVCF :
-
+		
+		if Arguments.slurm:
+			slurm_batch("iVARCall2_VCFonly_"+outputName,"echo 'Done waiting for slurm jobs'",Arguments, dependencies= str(" --dependency=afterok:"+":".join(map(str, slurm_batch_VCF))),threads=1,sync=1)
 		# write duration in log
 		t2 = datetime.datetime.now()
 		duration = t2 - t1
@@ -338,13 +401,18 @@ def main():
 
 	cmd = ["iVCFmerge", "-ref" , Arguments.refFASTA , "-f", " ".join(vcfFiles), "-o", \
 		outputName, "-m " + str(Arguments.maxMemory), \
-		"-T", str(Arguments.nbThreads), "-GATKJAR", Arguments.GATKJAR]
+		"-T", str(Arguments.nbThreads), \
+                "-GATKJAR "+ gatk_path \
+                ]
 
 			
 	os.system("echo " + " ".join(cmd) + " >> " + logFile)
-	
-	os.system(" ".join(cmd) + " >> " + logFile + " 2>&1")	
-
+	if not Arguments.slurm:
+		os.system(" ".join(cmd) + " >> " + logFile + " 2>&1")	
+	else:
+		print(str(" --dependency=afterok:")+ ":".join(map(str, slurm_batch_VCF)) ) 
+		print(str(slurm_batch_VCF))
+		slurm_VCFmerge_id = slurm_batch("VCFmerge"," ".join(cmd), Arguments, dependencies=str(" --dependency=afterok:")+ ":".join(slurm_batch_VCF),mem=32000,threads=1 )
 
 	################ Step 3 : VCFilter
 
@@ -357,7 +425,11 @@ def main():
 	#print " ".join(cmd)
 	os.system("echo " + " ".join(cmd) + " >> " + logFile)
 	
-	os.system(" ".join(cmd) + ">> " + logFile + " 2>&1")
+	if not Arguments.slurm:
+		os.system(" ".join(cmd) + ">> " + logFile + " 2>&1")
+	else:
+		slurm_VCFilter_id = slurm_batch("VCFilter"," ".join(cmd),Arguments,dependencies=" --dependency=afterok:"+str(slurm_VCFmerge_id), threads=1)
+
 
 	if(Arguments.removeTmpFiles):
 		os.system("rm " + outputName + "_SNP_INDEL.vcf*")
@@ -374,7 +446,12 @@ def main():
 
 	os.system("echo " + " ".join(cmd) + " >> " + logFile)
 	
-	os.system(" ".join(cmd) + ">> " + logFile + " 2>&1")
+	#os.system(" ".join(cmd) + ">> " + logFile + " 2>&1")
+	if not Arguments.slurm:
+		os.system(" ".join(cmd) + ">> " + logFile + " 2>&1")
+        else:
+		slurm_VCFtoMatrix_id = slurm_batch("VCFtoMatrix"," ".join(cmd),Arguments,dependencies=" --dependency=afterok:"+str(slurm_VCFmerge_id), threads=1)
+
 
 
 	################ Step 4 : vcf to fasta
@@ -389,7 +466,10 @@ def main():
 
 	os.system("echo " + " ".join(cmd) + " >> " + logFile)
 	
-	os.system(" ".join(cmd) + ">> " + logFile + " 2>&1")
+	if not Arguments.slurm:
+                os.system(" ".join(cmd) + ">> " + logFile + " 2>&1")
+        else:
+                slurm_VCFtoFasta_id = slurm_batch("VCFtoFasta"," ".join(cmd),Arguments,dependencies=" --dependency=afterok:"+str(slurm_VCFmerge_id), threads=1)
 
 
 	################ Step 5 : vcf to pseudo genome
@@ -402,7 +482,10 @@ def main():
 	#print " ".join(cmd)
 	os.system("echo " + " ".join(cmd) + " >> " + logFile)
 	
-	os.system(" ".join(cmd) + ">> " + logFile + " 2>&1")
+	if not Arguments.slurm:
+                os.system(" ".join(cmd) + ">> " + logFile + " 2>&1")
+        else:
+                slurm_VCFtoPseudoGenome_id = slurm_batch("VCFtoPseudogenome"," ".join(cmd),Arguments,dependencies=" --dependency=afterok:"+str(slurm_VCFmerge_id), threads=1)
 
 
 
@@ -421,9 +504,17 @@ def main():
 	os.system("echo " + "Duration : " + str(duration) + " min " + " >> " + logFile)
 
 	os.system(" ".join(cmd) + ">> " + logFile + " 2>&1")
+	if not Arguments.slurm:
+		os.system(" ".join(cmd) + ">> " + logFile + " 2>&1")
+        else:
+		slurm_Report_id = slurm_batch("Report"," ".join(cmd),Arguments,dependencies=" --dependency=afterok:"+str(slurm_VCFtoPseudoGenome_id)+":"+str(slurm_VCFtoFasta_id)+":"+str(slurm_VCFtoMatrix_id)+":"+str(slurm_VCFilter_id)+":"+ ":".join(map(str, slurm_batch_VCF)) +":"+  ":".join(map(str, slurm_batch_BAM)),threads=1,sync=1)
+		#slurm_report_id = slurm_batch("Report_"+outputName,"echo 'Done waiting for slurm Report job'",Arguments, dependencies= " --dependency=afterok:"+str(slurm_Report_id),threads=1)
+		slurm_batch("Cleanup_"+outputName,"scancel "+str(slurm_VCFtoPseudoGenome_id)+" "+str(slurm_VCFtoFasta_id)+" "+str(slurm_VCFtoMatrix_id)+" "+str(slurm_VCFilter_id) +" "+ str(slurm_VCFmerge_id)+ " " + " ".join(map(str, slurm_batch_VCF)) +  " " + " ".join(map(str, slurm_batch_BAM)),Arguments,dependencies= " --dependency=afterok:"+str(slurm_Report_id),threads=1,sync=1 )
 
+	
 	print "Finish !"
-
+	
 
 if __name__ == "__main__":
 	main()	        	
+#!/global/conda/envs/artwork/bin/python

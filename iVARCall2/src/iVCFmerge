@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/global/conda/envs/vartool_env/bin/python
 # -*- coding: iso-8859-1 -*-
 import os, sys, time
 import argparse
@@ -32,8 +32,7 @@ def get_parser():
 	parser.add_argument('-m', action="store", dest='maxMemory', 
 						type=int, default='4000', help='max memory to use in Mb (default:4000)')
 
-	parser.add_argument('-GATKJAR', action="store", dest='GATKJAR', 
-						type=str, default='/opt/GATK/3.7.0/GenomeAnalysisTK.jar', help='GenomeAnalysisTK jar path')  #required=True
+	parser.add_argument('-GATKJAR', action="store", dest='GATKJAR', type=str, help='GenomeAnalysisTK jar path')  #required=True
 
 	parser.add_argument('-T', action="store", dest='nbThreads', 
 						type=int, default='1', help='maximum number of threads to use (default:1)')
@@ -105,7 +104,7 @@ def main():
 
 	cmds = []
 
-	cmds.append(["java",Xmx, "-jar", Arguments.GATKJAR, \
+	cmds.append(["java ", Xmx," -jar ",Arguments.GATKJAR ," " , \
 		"-R", Arguments.refFASTA, \
 		"-T", "GenotypeGVCFs", \
 		"-o", Arguments.output + "_SNP_INDEL.vcf", \
@@ -116,7 +115,8 @@ def main():
 		cmds[0].append(" --variant ")
 		cmds[0].append(vcfFile)
 
-	exec_commands(cmds, 1)
+#	exec_commands(cmds, 1)
+	os.system(' '.join(cmds[0]))
 
 	print "\n--> VCF merge finish!\n"
 
@@ -125,7 +125,7 @@ def main():
 
 	cmds = []
 
-	cmds.append(["java",Xmx, "-jar", Arguments.GATKJAR, \
+	cmds.append(["java -jar ",Arguments.GATKJAR ,Xmx," " , \
 		"-R", Arguments.refFASTA, \
 		"-T", "SelectVariants", \
 		"-V", Arguments.output + "_SNP_INDEL.vcf", \
@@ -137,7 +137,7 @@ def main():
 
 	cmds = []
 
-	cmds.append(["java",Xmx, "-jar", Arguments.GATKJAR, \
+	cmds.append(["java -jar ",Arguments.GATKJAR ,Xmx," " , \
 		"-R", Arguments.refFASTA, \
 		"-T", "SelectVariants", \
 		"-V", Arguments.output + "_SNP_INDEL.vcf", \

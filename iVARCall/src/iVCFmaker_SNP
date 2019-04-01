@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 # -*- coding: iso-8859-1 -*-
 import os, sys, time
 import argparse
@@ -103,7 +103,7 @@ def main():
 	print "--> SNP calling...\n"
 	cmds = []
 
-	cmds.append(["java",Xmx, "-jar", Arguments.GATKJAR, "-R", Arguments.refFASTA, "-T", "UnifiedGenotyper", \
+	cmds.append(["gatk --java-options '",Xmx,"' " , "-R", Arguments.refFASTA, "-T", "UnifiedGenotyper", \
 		"-o", Arguments.output + "_SNP_raw.vcf", "-ndrs", "-stand_call_conf", Arguments.stand_call_conf, \
 		"-glm", "SNP", "-dcov", "200", "--sample_ploidy", "1"\
 		, "-nt ", str(Arguments.nbThreads), "-I", Arguments.BAM \

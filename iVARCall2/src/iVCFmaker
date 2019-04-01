@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/global/conda/envs/vartool_env/bin/python
 # -*- coding: iso-8859-1 -*-
 import os, sys, time
 import argparse
@@ -30,7 +30,7 @@ def get_parser():
 						type=int, default='4000', help='max memory to use in Mb (default:4000)')
 
 	parser.add_argument('-GATKJAR', action="store", dest='GATKJAR', 
-						type=str, default='/opt/GATK/3.7.0/GenomeAnalysisTK.jar', help='GenomeAnalysisTK jar path')  #required=True
+						type=str, help='GenomeAnalysisTK jar path')  #required=True
 
 	parser.add_argument('-T', action="store", dest='nbThreads', 
 						type=int, default='1', help='maximum number of threads to use (default:1)')
@@ -100,17 +100,18 @@ def main():
 	print "--> Variant calling...\n"
 	cmds = []
 
-	cmds.append(["java",Xmx, "-jar", Arguments.GATKJAR, \
+	#cmds.append(["gatk --java-options '",Xmx,"' " , \
+	cmds.append(["java ",Xmx," -jar ",Arguments.GATKJAR,  "-T", "HaplotypeCaller", \
 		"-R", Arguments.refFASTA, \
-		"-T", "HaplotypeCaller", \
 		"-o", Arguments.output + ".g.vcf",  \
-		"--emitRefConfidence GVCF ", \
-		"-nct ", str(Arguments.nbThreads), \
+		"--emitRefConfidence GVCF", \
+		"-nct", str(Arguments.nbThreads), \
 		"-I", Arguments.BAM, \
 		"-ploidy", "1" \
 		])
-
+	print(' '.join(cmds[0]))
 	os.system(' '.join(cmds[0]))
+#	os.system(' '.join(cmds))
 
 	#exec_commands(cmds, 1)
 	

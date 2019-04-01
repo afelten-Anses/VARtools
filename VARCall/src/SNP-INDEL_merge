@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 # -*- coding: iso-8859-1 -*-
 import os, sys, time
 import argparse
@@ -110,7 +110,7 @@ def main():
 	print "--> combination...\n"	
 	cmds = []
 
-	cmds.append(["java",Xmx, "-jar", Arguments.GATKJAR, \
+	cmds.append(["gatk --java-options '",Xmx,"' " , \
 		"-R", Arguments.refFASTA, \
 		"-T", "CombineVariants", \
 		"--variant:SNP", Arguments.SNP, \

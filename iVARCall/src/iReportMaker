@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/global/conda/envs/vartool_env/bin/python
 # -*- coding: iso-8859-1 -*-
 import os, sys, time
 import argparse
@@ -437,7 +437,7 @@ def main():
 	tex.close()
 
 	# make pdf
-	cmd = "pdflatex "
+	cmd = "pdflatex -interaction batchmode "#, nonstopmode,"
 	if("/" in texFile):
 		outputDirectory = texFile.split('/')[0:-1]
 		outputDirectory = '/'.join(outputDirectory)
