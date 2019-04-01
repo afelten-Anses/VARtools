@@ -1,7 +1,8 @@
-#!/global/conda/envs/artwork/bin/python
+#!/usr/bin/env python
 # -*- coding: iso-8859-1 -*-
 
 
+#!/global/conda/envs/artwork/bin/python
 import os, sys, re
 import datetime
 import time
