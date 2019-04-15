@@ -228,6 +228,27 @@ def commandLaunched(Arguments, logFile):
 		os.system("echo --removeTmpFiles >> " + logFile )	
 	
 
+def reference_indexing(refFASTA):
+    ##bwa index
+    command = ["bwa", "index", "-a", "is", refFASTA]
+    print(" ".join(command))
+    os.system(" ".join(command))
+    
+    ##fasta index
+    command = ["samtools", "faidx", refFASTA]
+    print(" ".join(command))
+    os.system(" ".join(command))
+    
+    outDicName = os.path.abspath(os.path.join(os.path.dirname(refFASTA),os.path.basename(refFASTA).split(".")[0] + ".dict"))
+    
+    l=["picard ","-Xmx4g", " CreateSequenceDictionary", "REFERENCE=" + refFASTA, \
+		"OUTPUT=" + outDicName]
+    l=" ".join(l)
+    print(l)
+    os.system(l)
+    
+    
+
 #main function	
 def main():	
 
@@ -286,7 +307,8 @@ def main():
 	new_Ref = Arguments.output + "/REF/reference.fasta"
 	copyfile(Arguments.refFASTA, new_Ref)
 	Arguments.refFASTA = os.path.abspath(new_Ref)
-
+	
+	reference_indexing(Arguments.refFASTA)
 
 	#for each PE/SE reads
 
