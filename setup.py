@@ -8,7 +8,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="VARtools",
-    version="2.0.12",
+    version="2.0.13",
     author="Arnaud Felten, Nicolas Radomski, Ludovic Mallet (pack)",
     author_email="arnaud.felten@anses.fr, nicolas.radomski@anses.fr, ludovic.mallet@anses.fr",
     description="VARtools: scripts for SNPs and INDELs analysis.",
