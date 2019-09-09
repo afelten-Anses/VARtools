@@ -471,7 +471,7 @@ def main():
 	if not Arguments.slurm:
 		os.system(" ".join(cmd) + ">> " + logFile + " 2>&1")
         else:
-		slurm_VCFtoMatrix_id = slurm_batch("VCFtoMatrix"," ".join(cmd),Arguments,dependencies=" --dependency=afterok:"+str(slurm_VCFmerge_id), threads=1)
+		slurm_VCFtoMatrix_id = slurm_batch("VCFtoMatrix"," ".join(cmd),Arguments,dependencies=" --dependency=afterok:"+str(slurm_VCFilter_id), threads=1)
 
 
 
@@ -491,7 +491,7 @@ def main():
 	if not Arguments.slurm:
                 os.system(" ".join(cmd) + ">> " + logFile + " 2>&1")
         else:
-                slurm_VCFtoFasta_id = slurm_batch("VCFtoFasta"," ".join(cmd),Arguments,dependencies=" --dependency=afterok:"+str(slurm_VCFmerge_id), threads=1)
+                slurm_VCFtoFasta_id = slurm_batch("VCFtoFasta"," ".join(cmd),Arguments,dependencies=" --dependency=afterok:"+str(slurm_VCFilter_id), threads=1)
 
 
 	################ Step 5 : vcf to pseudo genome
@@ -499,7 +499,7 @@ def main():
 	print "Step 6/7 ---> pseudo genome reconstruction"
 
 	cmd = ["VCFtoPseudoGenome", "-i", outputName + "_SNP_INDEL_filtered.vcf -ref ",\
-	Arguments.refFASTA, "-o", outputName3 + '_pseudoGenomes.fasta']
+	Arguments.refFASTA, "-o", outputName_fasta + '_pseudoGenomes.fasta']
 	commands['VCFtoPseudoGenome']=cmd
 	#print " ".join(cmd)
 	os.system("echo " + " ".join(cmd) + " >> " + logFile)
@@ -507,7 +507,7 @@ def main():
 	if not Arguments.slurm:
                 os.system(" ".join(cmd) + ">> " + logFile + " 2>&1")
         else:
-                slurm_VCFtoPseudoGenome_id = slurm_batch("VCFtoPseudogenome"," ".join(cmd),Arguments,dependencies=" --dependency=afterok:"+str(slurm_VCFmerge_id), threads=1)
+                slurm_VCFtoPseudoGenome_id = slurm_batch("VCFtoPseudogenome"," ".join(cmd),Arguments,dependencies=" --dependency=afterok:"+str(slurm_VCFilter_id), threads=1)
 
 
 
