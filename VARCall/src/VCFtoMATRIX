@@ -63,6 +63,7 @@ def main():
 
 
 	parser=get_parser()
+	csv.field_size_limit(900000000)
 		
 	#print parser.help if no arguments
 	if len(sys.argv)==1:

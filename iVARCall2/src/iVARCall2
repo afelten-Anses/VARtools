@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/global/conda/envs/artwork/bin/python
 # -*- coding: iso-8859-1 -*-
 
 
@@ -227,27 +227,21 @@ def commandLaunched(Arguments, logFile):
 	if Arguments.removeTmpFiles :
 		os.system("echo --removeTmpFiles >> " + logFile )	
 	
-
 def reference_indexing(refFASTA):
-    ##bwa index
-    command = ["bwa", "index", "-a", "is", refFASTA]
-    print(" ".join(command))
-    os.system(" ".join(command))
-    
-    ##fasta index
-    command = ["samtools", "faidx", refFASTA]
-    print(" ".join(command))
-    os.system(" ".join(command))
-    
-    outDicName = os.path.abspath(os.path.join(os.path.dirname(refFASTA),os.path.basename(refFASTA).split(".")[0] + ".dict"))
-    
-    l=["picard ","-Xmx4g", " CreateSequenceDictionary", "REFERENCE=" + refFASTA, \
-		"OUTPUT=" + outDicName]
-    l=" ".join(l)
-    print(l)
-    os.system(l)
-    
-    
+	##bwa index
+	command = ["bwa", "index", "-a", "is", refFASTA]
+	print(" ".join(command))
+	os.system(" ".join(command))
+	##fasta index
+	command = ["samtools", "faidx", refFASTA]
+	print(" ".join(command))
+	os.system(" ".join(command))
+	outDicName = os.path.abspath(os.path.join(os.path.dirname(refFASTA),os.path.basename(refFASTA).split(".")[0] + ".dict"))
+	l=["picard ", " CreateSequenceDictionary ", " REFERENCE=" + refFASTA," OUTPUT=" + outDicName]
+	l=" ".join(l)
+	print(l)
+	os.system(l)
+
 
 #main function	
 def main():	
@@ -307,7 +301,8 @@ def main():
 	new_Ref = Arguments.output + "/REF/reference.fasta"
 	copyfile(Arguments.refFASTA, new_Ref)
 	Arguments.refFASTA = os.path.abspath(new_Ref)
-	
+	#Arguments.output = os.path.abspath(Arguments.output)#test LM 20190909
+	workdir=os.path.abspath(Arguments.output)
 	reference_indexing(Arguments.refFASTA)
 
 	#for each PE/SE reads
@@ -317,6 +312,7 @@ def main():
 	slurm_batch_VCF = []	
 	bamFiles = []
 	vcfFiles = []
+	commands={}
 	for reads in readsList :
 
 		if " " in reads :
@@ -349,7 +345,7 @@ def main():
 			"-GATKJAR "+ gatk_path \
 			]
 
-
+		commands['BAM',outputName_sample]=cmd
 		if(Arguments.adaptaters):
 			cmd.append(" -a " + Arguments.adaptaters)	
 		if(Arguments.removeDuplicates):
@@ -366,8 +362,6 @@ def main():
                 else:
 			slurm_batch_BAM.append(slurm_batch("BAM_"+str(outputName_sample)," ".join(cmd),Arguments))
 
-
-		outputName_old = outputName		
 
 		if(Arguments.removeDuplicates and Arguments.indelRealigner):
 			outputName = outputName + "_removedup_realigned.bam"
@@ -393,7 +387,7 @@ def main():
 		]	
 
 		vcfFiles.append( os.path.abspath(Arguments.output + "/VCF/" + outputName_sample + ".g.vcf"))
-	
+		commands['VCF',outputName_sample]=cmd
 		os.system("echo " + " ".join(cmd) + " >> " + logFile)
 		if not Arguments.slurm:
 			os.system(" ".join(cmd) + " >> " + logFile + " 2>&1")	
@@ -418,7 +412,8 @@ def main():
 
 	################ Step 2 : iVCFmerge 
 
-	outputName = Arguments.output + "/VCF/" + Arguments.output
+	#outputName = Arguments.output + "/VCF/" + Arguments.output
+	outputName = os.path.join(workdir , "VCF" , Arguments.output)
 
 	print "Step 2/7 ---> merge all VCF files"
 
@@ -427,6 +422,7 @@ def main():
 		"-T", str(Arguments.nbThreads), \
                 "-GATKJAR "+ gatk_path \
                 ]
+	commands['VCFMerge']=cmd
 
 			
 	os.system("echo " + " ".join(cmd) + " >> " + logFile)
@@ -444,7 +440,7 @@ def main():
 	cmd = ["VCFilter", \
 	"-i", outputName + "_SNP_INDEL.vcf", \
 	"-o", outputName + "_SNP_INDEL_filtered"]
-
+	commands['VCFilter']=cmd
 	#print " ".join(cmd)
 	os.system("echo " + " ".join(cmd) + " >> " + logFile)
 	
@@ -463,10 +459,12 @@ def main():
 	print "Step 4/7 ---> make matrix from VCF"
 
 	os.system("mkdir " + Arguments.output + "/matrix")
-	outputName2 = Arguments.output + "/matrix/" + Arguments.output
+	#outputName2 = Arguments.output + "/matrix/" + Arguments.output
+	outputName_matrix = os.path.join(workdir , "matrix" , Arguments.output)
 
-	cmd = ["VCFtoMATRIX", "-i", outputName + "_SNP_INDEL_filtered.vcf", "-o", outputName2 ]	
 
+	cmd = ["VCFtoMATRIX", "-i", outputName + "_SNP_INDEL_filtered.vcf", "-o", outputName_matrix ]	
+	commands['VCFtoMATRIX']=cmd
 	os.system("echo " + " ".join(cmd) + " >> " + logFile)
 	
 	#os.system(" ".join(cmd) + ">> " + logFile + " 2>&1")
@@ -482,11 +480,12 @@ def main():
 	print "Step 5/7 ---> concatenate variant in FASTA file"
 
 	os.system("mkdir " + Arguments.output + "/FASTA")
-	outputName3 = Arguments.output + "/FASTA/" + Arguments.output
+	#outputName3 = Arguments.output + "/FASTA/" + Arguments.output
+	outputName_fasta = os.path.join(workdir , "matrix" , Arguments.output)
 
-	cmd = ["VCFtoFASTA", "-i", outputName + "_SNP_INDEL_filtered.vcf", "-o", outputName3, \
+	cmd = ["VCFtoFASTA", "-i", outputName + "_SNP_INDEL_filtered.vcf", "-o", outputName_fasta, \
 	'--SNP', "--INDEL"]
-
+	commands['VCFtoFASTA']=cmd
 	os.system("echo " + " ".join(cmd) + " >> " + logFile)
 	
 	if not Arguments.slurm:
@@ -501,7 +500,7 @@ def main():
 
 	cmd = ["VCFtoPseudoGenome", "-i", outputName + "_SNP_INDEL_filtered.vcf -ref ",\
 	Arguments.refFASTA, "-o", outputName3 + '_pseudoGenomes.fasta']
-
+	commands['VCFtoPseudoGenome']=cmd
 	#print " ".join(cmd)
 	os.system("echo " + " ".join(cmd) + " >> " + logFile)
 	
@@ -517,22 +516,65 @@ def main():
 	print "Step 7/7 ---> making pdf report"
 
 	cmd = ["iReportMaker2", "-i", logFile, "-o", Arguments.output + '/' + Arguments.output]
+	commands['ReportMaker']=cmd
+	#os.system("echo " + " ".join(cmd) + " >> " + logFile)
 
-	os.system("echo " + " ".join(cmd) + " >> " + logFile)
+	if not Arguments.slurm:
+		os.system("echo " + " ".join(cmd) + " >> " + logFile)
+		os.system(" ".join(cmd) + ">> " + logFile + " 2>&1")
+	else:
+		#remake a pseudo log file for the reportmaker
+		for reads in readsList :
+			if " " in reads :
+				r1 = reads.split(" ")[0]
+		else :
+			r1 = reads
+			outputName = r1.split("/")[-1]
+			print(outputName)
+			outputName = outputName.split(".")[-2]
+			if("_R1" in outputName):
+				outputName = outputName.replace("_R1","")
+			if("_1." in outputName):
+				outputName = outputName.replace("_1.",".")
+			if("_R2" in outputName):
+				outputName = outputName.replace("_R2","")
+			if("_2." in outputName):
+				outputName = outputName.replace("_2.",".")
+			#print "     - make BAM for " + outputName
+			outputName_sample = outputName
+			os.system(str(commands['BAM',outputName_sample])+ " >> " + logFile )
+			os.system("cat *BAM*"+outputName_sample+"*.out >> " + logFile )
+			os.system(str(commands['VCF',outputName_sample])+ " >> " + logFile )
+			os.system("cat *VCFmaker*"+outputName_sample+"*.out >> " + logFile )
+		
+		os.system("echo " + str(commands['VCFMerge'])+ " >> " + logFile )
+		os.system("cat *VCFMerge*.out >> " + logFile )
+		
+		os.system("echo " + str(commands['VCFilter'])+ " >> " + logFile )
+		os.system("cat *VCFilter*.out >> " + logFile )
+		
+		os.system("echo " + str(commands["VCFtoMATRIX"])+ " >> " + logFile )
+		os.system("cat *VCFtoMATRIX*.out >> " + logFile )
 
+		os.system("echo " + str(commands['VCFtoFASTA'])+ " >> " + logFile )
+		os.system("cat *VCFtoFASTA*.out >> " + logFile )
+		
+		os.system("echo " + str(commands['VCFtoPseudoGenome'])+ " >> " + logFile )
+		os.system("cat *VCFtoPseudoGenome*.out >> " + logFile )
+		
+		os.system("echo " + " ".join(cmd) + " >> " + logFile)
+		
+		slurm_Report_id = slurm_batch("Report"," ".join(cmd),Arguments,dependencies=" --dependency=afterok:"+str(slurm_VCFtoPseudoGenome_id)+":"+str(slurm_VCFtoFasta_id)+":"+str(slurm_VCFtoMatrix_id)+":"+str(slurm_VCFilter_id) ,threads=1,sync=1)
+		
+		slurm_batch("Cleanup_","scancel "+str(slurm_VCFtoPseudoGenome_id)+" "+str(slurm_VCFtoFasta_id)+" "+str(slurm_VCFtoMatrix_id)+" "+str(slurm_VCFilter_id) +" "+ str(slurm_VCFmerge_id)+ " " + " ".join(map(str, slurm_batch_VCF)) +  " " + " ".join(map(str, slurm_batch_BAM)),Arguments,dependencies= " --dependency=afterok:"+str(slurm_Report_id),threads=1,sync=1 )
+	
+	
 	# write duration in log
 	t2 = datetime.datetime.now()
 	duration = t2 - t1
 	duration = round(duration.total_seconds()/60,0)
 	os.system("echo " + "Duration : " + str(duration) + " min " + " >> " + logFile)
-
-	os.system(" ".join(cmd) + ">> " + logFile + " 2>&1")
-	if not Arguments.slurm:
-		os.system(" ".join(cmd) + ">> " + logFile + " 2>&1")
-        else:
-		slurm_Report_id = slurm_batch("Report"," ".join(cmd),Arguments,dependencies=" --dependency=afterok:"+str(slurm_VCFtoPseudoGenome_id)+":"+str(slurm_VCFtoFasta_id)+":"+str(slurm_VCFtoMatrix_id)+":"+str(slurm_VCFilter_id)+":"+ ":".join(map(str, slurm_batch_VCF)) +":"+  ":".join(map(str, slurm_batch_BAM)),threads=1,sync=1)
-		#slurm_report_id = slurm_batch("Report_"+outputName,"echo 'Done waiting for slurm Report job'",Arguments, dependencies= " --dependency=afterok:"+str(slurm_Report_id),threads=1)
-		slurm_batch("Cleanup_"+outputName,"scancel "+str(slurm_VCFtoPseudoGenome_id)+" "+str(slurm_VCFtoFasta_id)+" "+str(slurm_VCFtoMatrix_id)+" "+str(slurm_VCFilter_id) +" "+ str(slurm_VCFmerge_id)+ " " + " ".join(map(str, slurm_batch_VCF)) +  " " + " ".join(map(str, slurm_batch_BAM)),Arguments,dependencies= " --dependency=afterok:"+str(slurm_Report_id),threads=1,sync=1 )
+	#os.system(" ".join(cmd) + ">> " + logFile + " 2>&1")
 
 	
 	print "Finish !"
