@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/python
 # -*- coding: iso-8859-1 -*-
 import os, sys
 import csv
@@ -67,7 +67,6 @@ def main():
 
 
 	parser=get_parser()
-	csv.field_size_limit(900000000)
 		
 	#print parser.help if no arguments
 	if len(sys.argv)==1:
@@ -105,9 +104,11 @@ def main():
 					variant = []
 					variant.append(row[3])
 					variantModif = []
+					row[4]=row[4].replace('*','-')
 
-					if(row[4] != '.' and '*' not in row[4]):
-
+					#if(row[4] != '.' and '*' not in row[4]):
+					if(row[4] != '.'):
+					
 						variantModif.append(row[4].split(','))
 						variantModif = list(chain.from_iterable(variantModif))
 						variant = variant + variantModif
@@ -125,7 +126,7 @@ def main():
 								var = i.split(":")[0]
 								if(var=='.'):
 									skip = True
-								if var not in listeAlter :
+								if var not in listeAlter :                                     
 									listeAlter.append(var)
 
 						#virer les AF==1		
@@ -141,6 +142,8 @@ def main():
 								for baseVar in variant :
 									if len(baseVar) > maxLen :
 										maxLen = len(baseVar)
+								if '-' in variant and maxLen == 1:
+										maxLen = -1
 								
 								if maxLen > 1 :
 									INDEL = True
@@ -151,6 +154,11 @@ def main():
 											variantGap.append(baseVar + '-'*(maxLen-len(baseVar)))
 										variant = variantGap
 
+									dicoResult_INDEL[listGenome[y]].append(variant[int(var)])	
+									
+								elif maxLen == -1 :
+									INDEL = True
+                                    
 									dicoResult_INDEL[listGenome[y]].append(variant[int(var)])	
 
 								else :
