@@ -146,6 +146,9 @@ def main():
 						for baseVar in variant :
 							if len(baseVar) > maxLen :
 								maxLen = len(baseVar)
+							if baseVar == '*': # si * -> del d'1nt --> considéré comme indel
+								maxLen = 2
+								#print(variant)
 
 						#for each genome, compare the difference of variation between itself and other genomes		
 						pos = 0
